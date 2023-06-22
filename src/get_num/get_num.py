@@ -141,6 +141,7 @@ class GetNum:
                 ).to_csv(self.path_name_result, mode="a", index=False, header=False, sep="|")
 
     def run(self):
+        self.logger_print.info("СТАРТ ПРОГРАММЫ")
         self.count_not_duplicated = 0  # считает не дубликаты
         self.count_lin = -1  # счетчик строк
         self.count_duplicated = 0  # считает дубликаты
