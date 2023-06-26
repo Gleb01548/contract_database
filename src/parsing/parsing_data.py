@@ -81,14 +81,12 @@ class ParsingDataContract:
         Метод извлекает данные из json файла, полученного в результате парсинга
         """
 
-        
+    # def run(self):
+    #     self.initialize()
+    #     self.init_logger()
 
-    def run(self):
-        self.initialize()
-        self.init_logger()
-
-        for index in range(len(self.path_df)):
-            number_contract = self.path_df.loc["number_contract", index]
-            adress_customer = self.path_df.loc["adress_customer", index]
-            inn_customer = self.path_df.loc["inn_customer", index]
-            res = self.get_page(url=self.url_info, id=number_contract)
+    #     for index in range(len(self.path_df)):
+    #         number_contract = self.path_df.loc["number_contract", index]
+    #         adress_customer = self.path_df.loc["adress_customer", index]
+    #         inn_customer = self.path_df.loc["inn_customer", index]
+    #         res = self.get_page(url=self.url_info, id=number_contract)
