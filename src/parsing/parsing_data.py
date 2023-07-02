@@ -10,7 +10,6 @@ import bs4.element
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
-# Протестировать на отключение интренета
 # Добавить считывание старых данных + продолжение запросов
 # Добавить считывание уникального номера
 
@@ -22,7 +21,7 @@ class ParsingDataContract:
         path_output: str,
         path_dir_log: str,
         path_contract_problem: str,
-        drop_last: bool = True,
+        continue_parsing: bool = False,
     ) -> None:
         """
         Метод парсит данные с сайта https://zakupki.gov.ru/
@@ -30,7 +29,7 @@ class ParsingDataContract:
         self.path_df = path_df
         self.path_output = path_output
         self.path_dir_log = path_dir_log
-        self.drop_last = drop_last
+        self.continue_parsing = continue_parsing
         self.path_contract_problem = path_contract_problem
 
         self.url_info = (
@@ -102,7 +101,7 @@ class ParsingDataContract:
         if not os.path.exists(os.path.dirname(self.path_output)):
             os.makedirs(os.path.dirname(self.path_output))
 
-        if not os.path.exists(self.path_output) or self.drop_last:
+        if not os.path.exists(self.path_output) or not self.continue_parsing:
             pd.DataFrame(columns=self.list_columns_table).to_csv(
                 self.path_output, index=False, sep="|"
             )
@@ -116,7 +115,7 @@ class ParsingDataContract:
         if not os.path.exists(self.path_contract_problem):
             os.makedirs(os.path.dirname(self.path_contract_problem))
 
-        if not os.path.exists(self.path_contract_problem) or self.drop_last:
+        if not os.path.exists(self.path_contract_problem) or not self.continue_parsing:
             columns_prob = list(self.df_input.columns)
             columns_prob.append("сommentary")
             pd.DataFrame(columns=columns_prob).to_csv(
@@ -125,6 +124,17 @@ class ParsingDataContract:
         self.df_problem = pd.read_csv(self.path_contract_problem, sep="|", dtype="str")
 
         self.init_logger()
+
+        if self.continue_parsing:
+            self.make_continue_parsing()
+
+    def make_continue_parsing(self):
+        df_output = pd.read_csv(self.path_output, sep="|", dtype="str")
+        last_number_contract = df_output["number_contract"].iloc[-1]
+
+        last_index = self.df_input["number_contract"].to_list().index(last_number_contract)
+        self.df_input = self.df_input[self.df_input.index >= last_index]
+        df_output.iloc[:-1].to_csv(self.path_output, sep="|", index=False)
 
     def init_logger(self) -> None:
         """
@@ -1073,7 +1083,7 @@ def test():
         path_output="data/test_raw_data",
         path_dir_log="logs/parsing_data",
         path_contract_problem="data/contract_number/problem_contract",
-        drop_last=True,
+        continue_parsing=True,
     )
     get_num.run()
 
