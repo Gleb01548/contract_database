@@ -1,6 +1,7 @@
 import os
 import logging
 import re
+import time
 
 from tqdm import tqdm
 import requests
@@ -9,13 +10,19 @@ import bs4.element
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
-# Добавить считывание старых данных
-# Добавить тайминги + повторные запросы + запись не удачных запусков
+# Протестировать на отключение интренета
+# Добавить считывание старых данных + продолжение запросов
+# Добавить считывание уникального номера
 
 
 class ParsingDataContract:
     def __init__(
-        self, path_df: str, path_output: str, path_dir_log: str, drop_last: bool = True
+        self,
+        path_df: str,
+        path_output: str,
+        path_dir_log: str,
+        path_contract_problem: str,
+        drop_last: bool = True,
     ) -> None:
         """
         Метод парсит данные с сайта https://zakupki.gov.ru/
@@ -24,6 +31,7 @@ class ParsingDataContract:
         self.path_output = path_output
         self.path_dir_log = path_dir_log
         self.drop_last = drop_last
+        self.path_contract_problem = path_contract_problem
 
         self.url_info = (
             "https://zakupki.gov.ru/epz/contract/contractCard/common-info.html?reestrNumber="
@@ -96,10 +104,26 @@ class ParsingDataContract:
 
         if not os.path.exists(self.path_output) or self.drop_last:
             pd.DataFrame(columns=self.list_columns_table).to_csv(
-                f"{self.path_output}", index=False, sep="|"
+                self.path_output, index=False, sep="|"
             )
 
         self.df_input = pd.read_csv(self.path_df, sep="|", dtype="str")
+
+        self.path_contract_problem = os.path.join(
+            self.path_contract_problem, dir_name, os.path.basename(self.path_df)
+        )
+
+        if not os.path.exists(self.path_contract_problem):
+            os.makedirs(os.path.dirname(self.path_contract_problem))
+
+        if not os.path.exists(self.path_contract_problem) or self.drop_last:
+            columns_prob = list(self.df_input.columns)
+            columns_prob.append("сommentary")
+            pd.DataFrame(columns=columns_prob).to_csv(
+                self.path_contract_problem, index=False, sep="|"
+            )
+        self.df_problem = pd.read_csv(self.path_contract_problem, sep="|", dtype="str")
+
         self.init_logger()
 
     def init_logger(self) -> None:
@@ -135,14 +159,51 @@ class ParsingDataContract:
         Метод считывает заданную страницу,
         а потом преобразует в lxml
         """
-        for _ in range(10):
-            res = requests.get(url, headers={"User-Agent": UserAgent().random})
+        for _ in range(1, 11):
+            try:
+                res = requests.get(url, headers={"User-Agent": UserAgent().random})
+            except requests.exceptions.ConnectionError:
+                if self.check_internet_every_n_sec(10, 10):
+                    continue
+
             if res is not None and res.ok:
                 return BeautifulSoup(res.text, "lxml")
+            else:
+                try:
+                    if not self.check_internet():
+                        if self.check_internet_every_n_sec(10, 10):
+                            continue
+                except requests.exceptions.ConnectionError:
+                    pass
 
     def remove_bad_symbols(self, string: str) -> str:
         string = re.sub("\n|\||\xa0", "", string.strip())
         return " ".join(string.split())
+
+    def check_internet(self):
+        google = requests.get(
+            "https://www.google.ru/", headers={"User-Agent": UserAgent().random}
+        ).ok
+        google_com = requests.get(
+            "https://www.google.com/", headers={"User-Agent": UserAgent().random}
+        ).ok
+        yandex = requests.get("https://ya.ru/", headers={"User-Agent": UserAgent().random}).ok
+        mail = requests.get("https://mail.ru/", headers={"User-Agent": UserAgent().random}).ok
+        return any([google, google_com, yandex, mail])
+
+    def check_internet_every_n_sec(self, times: int, seconds: int):
+        self.logger.info("Проверка интернет-соединения")
+        for _ in range(times):
+            time.sleep(seconds)
+            try:
+                if self.check_internet():
+                    self.logger.info("Успех")
+                    return True
+            except requests.exceptions.ConnectionError:
+                self.logger.info("Неудача")
+        warn = "НЕТ ИНТРЕРНЕТА"
+        self.logger_print.warning(warn)
+        raise IOError(warn)
 
     # ИНФОРМАЦИЯ О ЗАКАЗЧИКЕ
     def find_full_name_customer(self, soup: BeautifulSoup) -> str:
@@ -772,7 +833,7 @@ class ParsingDataContract:
         ).parent.find_all("td", class_="tableBlock__col")
 
         if table_names is None or table_values is None:
-            "логги"
+            self.logger.info("Нет данных по поставщику")
             return None, None
 
         list_table_values = [
@@ -810,8 +871,11 @@ class ParsingDataContract:
 
     def payment_info(self, number_contract: str):
         soup = self.get_page(f"{self.url_payment}{number_contract}")
-
-        self.kbk = self.find_kbk(soup)
+        if soup is None:
+            self.add_to_csv_problem("Контракт payment_info не найден")
+            self.logger.info(f"{self.number_contract} Неудача payment_info")
+        else:
+            self.kbk = self.find_kbk(soup)
 
     def parsing_supplier(self, soup: BeautifulSoup) -> None:
         """
@@ -928,6 +992,18 @@ class ParsingDataContract:
             index=[0],
         ).to_csv(self.path_output, mode="a", index=False, header=False, sep="|")
 
+    def add_to_csv_problem(self, commentary: str):
+        self.dict_columns_table_problem = {
+            "number_contract": self.number_contract,
+            "adress_customer": self.adress_customer,
+            "inn_customer": self.inn_customer,
+            "commentary": commentary,
+        }
+        pd.DataFrame(
+            self.dict_columns_table_problem,
+            index=[0],
+        ).to_csv(self.path_contract_problem, mode="a", index=False, header=False, sep="|")
+
     def run(self):
         self.initialize()
         for index in tqdm(range(len(self.df_input))):
@@ -935,7 +1011,12 @@ class ParsingDataContract:
             self.logger.info(f"number_contract {number_contract}")
             self.adress_customer = self.df_input.loc[index, "adress_customer"]
             soup = self.get_page(f"{self.url_info}{number_contract}")
-
+            if soup is None:
+                self.number_contract = number_contract
+                self.inn_customer = self.df_input.loc[index, "inn_customer"]
+                self.add_to_csv_problem("Контракт info не найден")
+                self.logger.info(f"{self.number_contract} Неудача info")
+                continue
             # Информация о заказчике
             self.number_contract = number_contract
             self.full_name_customer = self.find_full_name_customer(soup)
@@ -991,6 +1072,7 @@ def test():
         path_df="data/contract_number/split_data_test/2014/0.csv",
         path_output="data/test_raw_data",
         path_dir_log="logs/parsing_data",
+        path_contract_problem="data/contract_number/problem_contract",
         drop_last=True,
     )
     get_num.run()
