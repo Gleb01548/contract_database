@@ -10,9 +10,6 @@ import bs4.element
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
-# Добавить считывание старых данных + продолжение запросов
-# Добавить считывание уникального номера
-
 
 class ParsingDataContract:
     def __init__(
@@ -43,6 +40,8 @@ class ParsingDataContract:
             "adress_customer",
             "full_name_customer",
             "short_name_customer",
+            "unique_site_code",
+            "unique_site_id",
             "id_customer",
             "inn_customer",
             "kpp_customer",
@@ -133,7 +132,7 @@ class ParsingDataContract:
         last_number_contract = df_output["number_contract"].iloc[-1]
 
         last_index = self.df_input["number_contract"].to_list().index(last_number_contract)
-        self.df_input = self.df_input[self.df_input.index >= last_index]
+        self.df_input = self.df_input[self.df_input.index >= last_index].reset_index(drop=True)
         df_output.iloc[:-1].to_csv(self.path_output, sep="|", index=False)
 
     def init_logger(self) -> None:
@@ -169,22 +168,17 @@ class ParsingDataContract:
         Метод считывает заданную страницу,
         а потом преобразует в lxml
         """
-        for _ in range(1, 11):
+        for i in range(1, 11):
             try:
                 res = requests.get(url, headers={"User-Agent": UserAgent().random})
             except requests.exceptions.ConnectionError:
-                if self.check_internet_every_n_sec(10, 10):
+                if self.check_internet_every_n_sec(120, 10):
                     continue
 
             if res is not None and res.ok:
                 return BeautifulSoup(res.text, "lxml")
-            else:
-                try:
-                    if not self.check_internet():
-                        if self.check_internet_every_n_sec(10, 10):
-                            continue
-                except requests.exceptions.ConnectionError:
-                    pass
+            elif i == 3 or i == 7:
+                self.check_maintenance()
 
     def remove_bad_symbols(self, string: str) -> str:
         string = re.sub("\n|\||\xa0", "", string.strip())
@@ -201,18 +195,40 @@ class ParsingDataContract:
         mail = requests.get("https://mail.ru/", headers={"User-Agent": UserAgent().random}).ok
         return any([google, google_com, yandex, mail])
 
-    def check_internet_every_n_sec(self, times: int, seconds: int):
+    def check_internet_every_n_sec(self, times: int, seconds: int) -> bool:
         self.logger.info("Проверка интернет-соединения")
         for _ in range(times):
             time.sleep(seconds)
             try:
                 if self.check_internet():
-                    self.logger.info("Успех")
                     return True
             except requests.exceptions.ConnectionError:
-                self.logger.info("Неудача")
-        warn = "НЕТ ИНТРЕРНЕТА"
-        self.logger_print.warning(warn)
+                pass
+
+        warn = "НЕТ ИНТЕРНЕТА"
+        self.logger.warning(warn)
+        raise IOError(warn)
+
+    def check_maintenance(self) -> None:
+        self.logger.info("Проверка сайта на технические работы")
+        list_number_check = [
+            "0363200013140000022",
+            "0828300088140000016",
+            "0853300009414000001",
+            "0711200006614000007",
+            "0349200015514000201",
+            "0347200000814000015",
+        ]
+        for number_contract in list_number_check:
+            res = requests.get(
+                f"{self.url_info}{number_contract}", headers={"User-Agent": UserAgent().random}
+            )
+            if not res.ok:
+                continue
+            else:
+                return None
+        warn = "НА САЙТЕ ТЕХНИЧЕСКИЕ РАБОТЫ"
+        self.logger.warning(warn)
         raise IOError(warn)
 
     # ИНФОРМАЦИЯ О ЗАКАЗЧИКЕ
@@ -240,6 +256,25 @@ class ParsingDataContract:
             return self.remove_bad_symbols(castomer)
         except AttributeError:
             self.logger.info("Не выделено Сокращенное наименование заказчика")
+            return None
+
+    def find_unique_account_number(self, soup: BeautifulSoup) -> str:
+        """
+        Уникальный учетный номер организации
+        """
+        try:
+            link = soup.find("span", class_="cardMainInfo__content").find("a")["href"]
+            number = re.search("Code=[0-9]+", link)
+            if number is None:
+                number = re.search("Id=[0-9]+", link)
+                if number is None:
+                    return None, None
+                else:
+                    return None, re.search("[0-9]+", number[0])[0]
+            else:
+                return re.search("[0-9]+", number[0])[0], None
+        except AttributeError:
+            self.logger.info("Не выделено Уникальный учетный номер организации")
             return None
 
     def find_id_customer(self, soup: BeautifulSoup) -> str:
@@ -949,6 +984,8 @@ class ParsingDataContract:
             "adress_customer": self.adress_customer,
             "full_name_customer": self.full_name_customer,
             "short_name_customer": self.short_name_customer,
+            "unique_site_code": self.unique_site_code,
+            "unique_site_id": self.unique_site_id,
             "id_customer": self.id_customer,
             "inn_customer": self.inn_customer,
             "kpp_customer": self.kpp_customer,
@@ -1031,6 +1068,7 @@ class ParsingDataContract:
             self.number_contract = number_contract
             self.full_name_customer = self.find_full_name_customer(soup)
             self.short_name_customer = self.find_short_name_customer(soup)
+            self.unique_site_code, self.unique_site_id = self.find_unique_account_number(soup)
             self.id_customer = self.find_id_customer(soup)
             self.inn_customer = self.find_inn_customer(soup)
             self.kpp_customer = self.find_kpp_customer(soup)
@@ -1083,7 +1121,7 @@ def test():
         path_output="data/test_raw_data",
         path_dir_log="logs/parsing_data",
         path_contract_problem="data/contract_number/problem_contract",
-        continue_parsing=True,
+        continue_parsing=False,
     )
     get_num.run()
 
