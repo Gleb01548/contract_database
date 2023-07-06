@@ -21,7 +21,7 @@ class ParsingDataContract:
         continue_parsing: bool = False,
     ) -> None:
         """
-        Метод парсит данные о контрактах с сайта https://zakupki.gov.ru/
+        Метод парсит данные с сайта https://zakupki.gov.ru/
         """
         self.path_df = path_df
         self.path_output = path_output
@@ -32,6 +32,7 @@ class ParsingDataContract:
         self.url_info = (
             "https://zakupki.gov.ru/epz/contract/contractCard/common-info.html?reestrNumber="
         )
+        self.url_payment = "https://zakupki.gov.ru/epz/contract/contractCard/"
         self.url_payment += "payment-info-and-target-of-order.html?reestrNumber="
 
         self.list_columns_table = [
