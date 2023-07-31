@@ -39,8 +39,11 @@ def extract_code_id(
                     buffer_set -= global_set_id
                     buffer_set -= set(["0"])
                     set_id.update(buffer_set)
-    df_code = pd.DataFrame({"code": list(set_code)})
-    df_id = pd.DataFrame({"id": list(set_id)})
+    list_code = list(set_code)
+    list_id = list(set_id)
+    list_code_type = ["Code"] * len(list_code) + ["Id"] * len(list_id)
+    list_code.extend(list_id)
+    df_code = pd.DataFrame({"code": list_code, "code_type": list_code_type})
 
     dir_name = os.path.basename(input_path)
     output_path = os.path.join(output_path, dir_name)
@@ -48,12 +51,11 @@ def extract_code_id(
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     df_code.to_csv(os.path.join(output_path, "code.csv"), sep="|", index=False)
-    df_id.to_csv(os.path.join(output_path, "id.csv"), sep="|", index=False)
 
 
 if __name__ == "__main__":
     extract_code_id(
-        input_path="data/test_raw_data/2014/",
+        input_path="data/raw_data/contract/2014/",
         path_global_set_code="data/global_cache/cache_code.csv",
         path_global_set_id="data/global_cache/cache_id.csv",
         output_path="data/contract_number/code_id",

@@ -173,8 +173,8 @@ class GetNum:
 
 def test():
     get_num = GetNum(
-        path_dir_input="data/data_from_spendgov/2014",
-        path_name_result="data/contract_number/test_data/2014.csv",
+        path_dir_input="data/data_from_spendgov/2022",
+        path_name_result="data/contract_number/numbers/2022.csv",
         path_dir_log="logs/logs_get_num",
         drop_last=True,
     )
