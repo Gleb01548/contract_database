@@ -1072,10 +1072,11 @@ class ParsingDataContract:
             number_contract = self.df_input.loc[index, "number_contract"]
             self.logger.info(f"number_contract {number_contract}")
             self.adress_customer = self.df_input.loc[index, "adress_customer"]
+            self.inn_customer = self.df_input.loc[index, "inn_customer"]
+
             soup = self.get_page(f"{self.url_info}{number_contract}")
             if soup is None:
                 self.number_contract = number_contract
-                self.inn_customer = self.df_input.loc[index, "inn_customer"]
                 self.add_to_csv_problem("Контракт info не найден")
                 self.logger.info(f"{self.number_contract} Неудача info")
                 continue
@@ -1132,7 +1133,7 @@ class ParsingDataContract:
 
 def test():
     get_num = ParsingDataContract(
-        path_df="data/contract_number/split_data/2014/1.csv",
+        path_df="data/contract_number/split_data/2022/1.csv",
         path_output="data/raw_data/contract",
         path_dir_log="logs/parsing_data",
         path_contract_problem="data/contract_number/problem_contract/parsing_data",

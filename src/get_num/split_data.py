@@ -46,7 +46,7 @@ def split_data(
 
 if __name__ == "__main__":
     split_data(
-        path_data="data/contract_number/numbers/2014.csv",
+        path_data="data/contract_number/numbers/2022.csv",
         path_output="data/contract_number/split_data",
         n_split=500,
     )

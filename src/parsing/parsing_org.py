@@ -34,6 +34,7 @@ class ParsingOrg:
         self.list_columns_table = [
             "code",
             "code_type",
+            "access_blocking",
             "full_name",
             "short_name",
             "code_registr",
@@ -215,6 +216,23 @@ class ParsingOrg:
         self.logger.warning(warn)
         raise IOError(warn)
 
+    def find_access_blocking(self, soup: BeautifulSoup) -> str:
+        try:
+            query_1 = "Доступ организации заблокирован организацией,"
+            query_2 = "оказывающей услуги по обслуживанию пользователей ЕИС"
+            query = query_1 + " " + query_2
+
+            soup = soup.find(
+                "span",
+                class_="section__title",
+                string=query,
+            )
+            access = soup.parent.find("span", class_="section__info")
+            return self.emove_bad_symbols(access.get_text())
+        except AttributeError:
+            # логии
+            return None
+
     def find_full_name(self, soup: BeautifulSoup) -> str:
         """
         Полное имя организации
@@ -332,15 +350,19 @@ class ParsingOrg:
             return None
 
     def find_oktmo(self, soup: BeautifulSoup) -> str:
-        """
-        ОКТМО
-        """
         try:
             code = soup.find(
                 "span",
                 class_="section__title",
                 string="ОКТМО",
             )
+            if code is None:
+                code = soup.find(
+                    "span",
+                    class_="section__title",
+                    string="Код ОКТМО",
+                )
+
             code = code.parent.find("span", class_="section__info")
             code = self.remove_bad_symbols(code.get_text())
             return code
@@ -718,6 +740,7 @@ class ParsingOrg:
         self.dict_columns_table = {
             "code": self.code,
             "code_type": self.code_type,
+            "access_blocking": self.access_blocking,
             "full_name": self.full_name,
             "short_name": self.short_name,
             "code_registr": self.code_registr,
@@ -767,6 +790,22 @@ class ParsingOrg:
             index=[0],
         ).to_csv(self.path_contract_problem, mode="a", index=False, header=False, sep="|")
 
+    def find_another_info(self, soup_another: BeautifulSoup):
+        self.credentials = self.find_credentials(soup_another)
+        self.date_registration_tax = self.find_date_registration_tax(soup_another)
+        self.organization_type = self.find_organization_type(soup_another)
+        self.organization_level = self.find_organization_level(soup_another)
+        self.okpo_code = self.find_okpo_code(soup_another)
+        self.okfd_code = self.find_okfd_code(soup_another)
+        self.budget_code, self.budget_name = self.parsing_budget_table(soup_another)
+        self.telephone = self.find_telephone(soup_another)
+        self.fax = self.find_fax(soup_another)
+        self.postal_adress = self.find_postal_adress(soup_another)
+        self.email = self.find_email(soup_another)
+        self.site = self.find_site(soup_another)
+        self.contact_person = self.find_contact_person(soup_another)
+        self.time_zone = self.find_time_zone(soup_another)
+
     def run(self):
         self.initialize()
         for index in tqdm(range(len(self.df_input))):
@@ -781,6 +820,7 @@ class ParsingOrg:
                 self.logger.info(f"{self.code} {self.code_type} Неудача info")
                 continue
             # Информация о заказчике
+            self.access_blocking = self.find_access_blocking(soup)
             self.full_name = self.find_full_name(soup)
             self.short_name = self.find_short_name(soup)
             self.code_registr = self.find_code_registr(soup)
@@ -799,26 +839,13 @@ class ParsingOrg:
             self.okopf_name = self.find_okopf_name(soup)
 
             # парсин вкладки дополнительная информация
-            soup = self.get_page(link_another)
-            if soup is None:
-                self.add_to_csv_problem("Полномочия another не найдены")
-                self.logger.info(f"{self.code} {self.code_type} Неудача another")
+            soup_another = self.get_page(link_another)
+            if soup_another is None:
+                self.find_another_info(soup_another)
+                self.add_data_to_csv()
                 continue
 
-            self.credentials = self.find_credentials(soup)
-            self.date_registration_tax = self.find_date_registration_tax(soup)
-            self.organization_type = self.find_organization_type(soup)
-            self.organization_level = self.find_organization_level(soup)
-            self.okpo_code = self.find_okpo_code(soup)
-            self.okfd_code = self.find_okfd_code(soup)
-            self.budget_code, self.budget_name = self.parsing_budget_table(soup)
-            self.telephone = self.find_telephone(soup)
-            self.fax = self.find_fax(soup)
-            self.postal_adress = self.find_postal_adress(soup)
-            self.email = self.find_email(soup)
-            self.site = self.find_site(soup)
-            self.contact_person = self.find_contact_person(soup)
-            self.time_zone = self.find_time_zone(soup)
+            self.find_another_info(soup_another)
             self.add_data_to_csv()
 
         self.logger_print.info(f"Успешно завершено {self.file_name}")
