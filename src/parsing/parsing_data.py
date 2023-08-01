@@ -18,6 +18,7 @@ class ParsingDataContract:
         path_output: str,
         path_dir_log: str,
         path_contract_problem: str,
+        proxy: str = None,
         continue_parsing: bool = False,
     ) -> None:
         """
@@ -27,6 +28,7 @@ class ParsingDataContract:
         self.path_output = path_output
         self.path_dir_log = path_dir_log
         self.continue_parsing = continue_parsing
+        self.proxy = proxy
         self.path_contract_problem = path_contract_problem
 
         self.url_info = (
@@ -170,7 +172,9 @@ class ParsingDataContract:
         """
         for i in range(1, 11):
             try:
-                res = requests.get(url, headers={"User-Agent": UserAgent().random})
+                res = requests.get(
+                    url, headers={"User-Agent": UserAgent().random}, proxies=self.proxy
+                )
             except requests.exceptions.ConnectionError:
                 if self.check_internet_every_n_sec(120, 10):
                     continue
