@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def split_data(
-    path_data: str, n_split: int, path_output: str = None, attachment: str = None
+    path_data: str, n_split: int, path_output: str = None, attachment: str = ""
 ) -> None:
     """
     Метод разбивает df (path_data) на заданное
@@ -19,11 +19,10 @@ def split_data(
             если путь не задан, будет сформирован на основании path_data
 
     """
-    if path_output is None:
-        path_output = os.path.join(
-            "data/contract_number/split_data_test",
-            os.path.basename(path_data).removesuffix(".csv"),
-        )
+    path_output = os.path.join(
+        path_output,
+        os.path.basename(path_data).removesuffix(".csv"),
+    )
     if not os.path.exists(path_output):
         os.makedirs(path_output)
 
@@ -46,4 +45,8 @@ def split_data(
 
 
 if __name__ == "__main__":
-    split_data(path_data="data/contract_number/test_data/2014.csv", n_split=500)
+    split_data(
+        path_data="data/contract_number/numbers/2021.csv",
+        path_output="data/contract_number/split_data/contract",
+        n_split=500,
+    )

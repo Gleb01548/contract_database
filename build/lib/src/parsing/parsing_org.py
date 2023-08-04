@@ -116,7 +116,8 @@ class ParsingOrg:
 
     def make_continue_parsing(self):
         df_output = pd.read_csv(self.path_output, sep="|", dtype="str")
-        print()
+        if len(df_output) == 0:
+            return None
         last_code = df_output["code"].iloc[-1]
 
         last_index = self.df_input["code"].to_list().index(last_code)

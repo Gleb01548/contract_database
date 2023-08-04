@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def split_data(
-    path_data: str, n_split: int, path_output: str = None, attachment: str = ''
+    path_data: str, n_split: int, path_output: str = None, attachment: str = ""
 ) -> None:
     """
     Метод разбивает df (path_data) на заданное
@@ -46,7 +46,7 @@ def split_data(
 
 if __name__ == "__main__":
     split_data(
-        path_data="data/contract_number/numbers/2022.csv",
+        path_data="data/contract_number/numbers/2021.csv",
         path_output="data/contract_number/split_data/contract",
         n_split=500,
     )

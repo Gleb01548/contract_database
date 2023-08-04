@@ -131,6 +131,8 @@ class ParsingDataContract:
 
     def make_continue_parsing(self):
         df_output = pd.read_csv(self.path_output, sep="|", dtype="str")
+        if len(df_output) == 0:
+            return None
         last_number_contract = df_output["number_contract"].iloc[-1]
 
         last_index = self.df_input["number_contract"].to_list().index(last_number_contract)
@@ -1137,11 +1139,11 @@ class ParsingDataContract:
 
 def test():
     get_num = ParsingDataContract(
-        path_df="data/contract_number/split_data/2022/1.csv",
+        path_df="data/contract_number/split_data/contract/2022/10.csv",
         path_output="data/raw_data/contract",
         path_dir_log="logs/parsing_data",
         path_contract_problem="data/contract_number/problem_contract/parsing_data",
-        continue_parsing=False,
+        continue_parsing=True,
     )
     get_num.run()
 
