@@ -856,14 +856,14 @@ class ParsingOrg:
 
 
 def test():
-    get_num = ParsingOrg(
+    parsing_org = ParsingOrg(
         path_df="data/contract_number/code_id/2014/code.csv",
         path_output="data/raw_data/org",
         path_dir_log="logs/parsing_org",
         path_contract_problem="data/contract_number/problem_contract/parsing_org",
         continue_parsing=True,
     )
-    get_num.run()
+    parsing_org.run()
 
 
 if __name__ == "__main__":

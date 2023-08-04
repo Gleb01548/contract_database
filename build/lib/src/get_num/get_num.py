@@ -88,7 +88,7 @@ class GetNum:
         Метод создает 2 логера, logger пишит данные в только в файл,
         logger_print пишит еще и в консоль
         """
-        result_name = os.path.basename(self.path_name_result)
+        result_name = os.path.basename(self.path_name_result).split(".")[0]
         file_log = os.path.join(self.path_dir_log, result_name)
 
         file_log = logging.FileHandler(f"{file_log}.log", mode="a")
@@ -173,8 +173,8 @@ class GetNum:
 
 def test():
     get_num = GetNum(
-        path_dir_input="data/data_from_spendgov/2014",
-        path_name_result="data/contract_number/test_data/2014.csv",
+        path_dir_input="data/data_from_spendgov/2021",
+        path_name_result="data/contract_number/numbers/2021.csv",
         path_dir_log="logs/logs_get_num",
         drop_last=True,
     )

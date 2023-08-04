@@ -18,15 +18,17 @@ class ParsingDataContract:
         path_output: str,
         path_dir_log: str,
         path_contract_problem: str,
+        proxy: str = None,
         continue_parsing: bool = False,
     ) -> None:
         """
-        Метод парсит данные с сайта https://zakupki.gov.ru/
+        Метод парсит данные о контрактах с сайта https://zakupki.gov.ru/
         """
         self.path_df = path_df
         self.path_output = path_output
         self.path_dir_log = path_dir_log
         self.continue_parsing = continue_parsing
+        self.proxy = proxy
         self.path_contract_problem = path_contract_problem
 
         self.url_info = (
@@ -170,7 +172,9 @@ class ParsingDataContract:
         """
         for i in range(1, 11):
             try:
-                res = requests.get(url, headers={"User-Agent": UserAgent().random})
+                res = requests.get(
+                    url, headers={"User-Agent": UserAgent().random}, proxies=self.proxy
+                )
             except requests.exceptions.ConnectionError:
                 if self.check_internet_every_n_sec(120, 10):
                     continue
@@ -297,10 +301,13 @@ class ParsingDataContract:
             soup = soup.find("span", string="ИНН")
             code = soup.parent.find("span", class_="section__info")
             code = code.get_text()
-            return self.remove_bad_symbols(code)
+            code = self.remove_bad_symbols(code)
+            if code is None:
+                return self.inn_customer
+            return self.inn_customer
         except AttributeError:
             self.logger.info("Не выделено ИНН заказчика")
-            return None
+            return self.inn_customer
 
     def find_kpp_customer(self, soup: BeautifulSoup) -> str:
         """
@@ -914,6 +921,16 @@ class ParsingDataContract:
             self.logger.info("Не выделено КБК")
             return None
 
+    def find_contract_object(self, soup: BeautifulSoup) -> str:
+        "Объекты закупки"
+        try:
+            obj = soup.find(
+                "div", class_="padBtm5 inline js-expand-all-list--not-count"
+            ).get_text()
+            return self.remove_bad_symbols(obj)
+        except AttributeError:
+            return None
+
     def payment_info(self, number_contract: str):
         soup = self.get_page(f"{self.url_payment}{number_contract}")
         if soup is None:
@@ -921,6 +938,8 @@ class ParsingDataContract:
             self.logger.info(f"{self.number_contract} Неудача payment_info")
         else:
             self.kbk = self.find_kbk(soup)
+            if self.contract_item is None:
+                self.contract_item = self.find_contract_object(soup)
 
     def parsing_supplier(self, soup: BeautifulSoup) -> None:
         """
@@ -1057,10 +1076,11 @@ class ParsingDataContract:
             number_contract = self.df_input.loc[index, "number_contract"]
             self.logger.info(f"number_contract {number_contract}")
             self.adress_customer = self.df_input.loc[index, "adress_customer"]
+            self.inn_customer = self.df_input.loc[index, "inn_customer"]
+
             soup = self.get_page(f"{self.url_info}{number_contract}")
             if soup is None:
                 self.number_contract = number_contract
-                self.inn_customer = self.df_input.loc[index, "inn_customer"]
                 self.add_to_csv_problem("Контракт info не найден")
                 self.logger.info(f"{self.number_contract} Неудача info")
                 continue
@@ -1117,10 +1137,10 @@ class ParsingDataContract:
 
 def test():
     get_num = ParsingDataContract(
-        path_df="data/contract_number/split_data_test/2014/1.csv",
-        path_output="data/test_raw_data",
+        path_df="data/contract_number/split_data/2022/1.csv",
+        path_output="data/raw_data/contract",
         path_dir_log="logs/parsing_data",
-        path_contract_problem="data/contract_number/problem_contract",
+        path_contract_problem="data/contract_number/problem_contract/parsing_data",
         continue_parsing=False,
     )
     get_num.run()
