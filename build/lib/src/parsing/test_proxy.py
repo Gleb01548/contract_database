@@ -23,7 +23,7 @@ def test_proxy(list_proxy: list):
 
 def test(path_proxy: str):
     list_proxy = pd.read_csv(path_proxy, header=None, dtype=str)[0].to_list()
-    good_proxy = proxes_test(list_proxy)
+    good_proxy = test_proxy(list_proxy)
 
     print(f"Работает {len(good_proxy)} из {len(good_proxy)} прокси")
 

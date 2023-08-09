@@ -4,6 +4,7 @@ from .parsing.extract_code_id import extract_code_id
 from .parsing.parsing_data import ParsingDataContract
 from .parsing.parsing_org import ParsingOrg
 from .parsing.test_proxy import test_proxy
+from . import constants
 
 __all__ = [
     "GetNum",
@@ -12,4 +13,6 @@ __all__ = [
     "ParsingDataContract",
     "ParsingOrg",
     "test_proxy",
+    # пути
+    "constants",
 ]

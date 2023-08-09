@@ -3,6 +3,13 @@ import math
 
 import pandas as pd
 
+from src.constants import (
+    PATH_NUMBERS,
+    PATH_SPLIT_DATA_CONTRACT,
+    PATH_CODE_ID,
+    PATH_SPLIT_DATA_CODE,
+)
+
 
 def split_data(
     path_data: str, n_split: int, path_output: str = None, attachment: str = ""
@@ -19,13 +26,6 @@ def split_data(
             если путь не задан, будет сформирован на основании path_data
 
     """
-    path_output = os.path.join(
-        path_output,
-        os.path.basename(path_data).removesuffix(".csv"),
-    )
-    if not os.path.exists(path_output):
-        os.makedirs(path_output)
-
     df = pd.read_csv(path_data, sep="|", dtype="str")
     x_len = len(df)
 
@@ -38,15 +38,24 @@ def split_data(
     if attachment:
         attachment += "_"
 
-    for index, period in enumerate(list_period):
-        p0 = period[0]
-        p1 = period[1]
-        df[p0:p1].to_csv(f"{path_output}/{attachment}{index}.csv", sep="|", index=False)
+        for index, period in enumerate(list_period):
+            p0 = period[0]
+            p1 = period[1]
+            df[p0:p1].to_csv(f"{path_output}/{attachment}{index}.csv", sep="|", index=False)
+    else:
+        for index, period in enumerate(list_period):
+            p0 = period[0]
+            p1 = period[1]
+            df[p0:p1].to_csv(f"{path_output}/{index}.csv", sep="|", index=False)
+
+
+def test(input_file: str):
+    path_data = os.path.join(PATH_CODE_ID, f"{input_file}.csv")
+    path_output = os.path.join(PATH_SPLIT_DATA_CODE, input_file)
+    print(path_data)
+    print(path_output)
+    split_data(path_data=path_data, path_output=path_output, n_split=10)
 
 
 if __name__ == "__main__":
-    split_data(
-        path_data="data/contract_number/numbers/2021.csv",
-        path_output="data/contract_number/split_data/contract",
-        n_split=500,
-    )
+    test("2014")

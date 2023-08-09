@@ -1,10 +1,13 @@
 import os
 import json
-import logging
 from zipfile import ZipFile
 
+import logging
 import pandas as pd
 from tqdm import tqdm
+from logging import Logger
+
+from src.constants import PATH_LOGS_GET_NUM, PATH_DATA_FROM_SPENDGOV, PATH_NUMBERS
 
 
 class GetNum:
@@ -26,7 +29,7 @@ class GetNum:
         self,
         path_dir_input: str,
         path_name_result: str,
-        path_dir_log: str,
+        path_log: str,
         drop_last: bool = True,
     ) -> None:
         """
@@ -41,15 +44,34 @@ class GetNum:
 
         self.path_dir_input = path_dir_input
         self.path_name_result = path_name_result
-        self.path_dir_log = path_dir_log
 
-        self.init_logger()
+        self.logger_print, self.logger = self.make_logger(path_log)
 
         if not os.path.exists(self.path_name_result) or drop_last:
             pd.DataFrame(columns=["number_contract", "adress_customer", "inn_customer"]).to_csv(
                 f"{self.path_name_result}", index=False, sep="|"
             )
+        print("Подготовка кэша")
         self.make_cache()
+
+    def make_logger(self, path_for_file_log: str) -> tuple[Logger]:
+        file_log = logging.FileHandler(path_for_file_log, mode="a")
+        console_out = logging.StreamHandler()
+        formatter = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
+        file_log.setFormatter(formatter)
+
+        # логер который выводит также данные в консоль
+        logger_print = logging.getLogger(f"{__name__}_print")
+        logger_print.setLevel(logging.INFO)
+        logger_print.addHandler(file_log)
+        logger_print.addHandler(console_out)
+
+        # просто логер
+        logger = logging.getLogger(f"{__name__}")
+        logger.setLevel(logging.INFO)
+        logger.addHandler(file_log)
+
+        return logger_print, logger
 
     def make_cache(self):
         """
@@ -82,30 +104,6 @@ class GetNum:
                 for filename in z.namelist():
                     full_list_file.append({"zip_name": path_zip, "file_name": filename})
         return full_list_file
-
-    def init_logger(self) -> None:
-        """
-        Метод создает 2 логера, logger пишит данные в только в файл,
-        logger_print пишит еще и в консоль
-        """
-        result_name = os.path.basename(self.path_name_result).split(".")[0]
-        file_log = os.path.join(self.path_dir_log, result_name)
-
-        file_log = logging.FileHandler(f"{file_log}.log", mode="a")
-        console_out = logging.StreamHandler()
-        formatter = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
-        file_log.setFormatter(formatter)
-
-        # логер который выводит также данные в консоль
-        self.logger_print = logging.getLogger(f"{__name__}_print")
-        self.logger_print.setLevel(logging.INFO)
-        self.logger_print.addHandler(file_log)
-        self.logger_print.addHandler(console_out)
-
-        # просто логер
-        self.logger = logging.getLogger(f"{__name__}")
-        self.logger.setLevel(logging.INFO)
-        self.logger.addHandler(file_log)
 
     def get_data(self, line):
         """
@@ -171,15 +169,18 @@ class GetNum:
         self.logger_print.info(f"Число none-номеров: {self.count_none_contract}")
 
 
-def test():
+def test(input_dir):
+    path_input = os.path.join(PATH_DATA_FROM_SPENDGOV, input_dir)
+    path_result = os.path.join(PATH_NUMBERS, f"{input_dir}.csv")
+    path_logs_get_num = os.path.join(PATH_LOGS_GET_NUM, f"{input_dir}.log")
     get_num = GetNum(
-        path_dir_input="data/data_from_spendgov/2021",
-        path_name_result="data/contract_number/numbers/2021.csv",
-        path_dir_log="logs/logs_get_num",
+        path_dir_input=path_input,
+        path_name_result=path_result,
+        path_log=path_logs_get_num,
         drop_last=True,
     )
     get_num.run()
 
 
 if __name__ == "__main__":
-    test()
+    test("2017")

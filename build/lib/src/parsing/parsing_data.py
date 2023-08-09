@@ -1,14 +1,22 @@
 import os
-import logging
 import re
 import time
 
-from tqdm import tqdm
+import logging
 import requests
 import pandas as pd
 import bs4.element
+from tqdm import tqdm
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
+from logging import Logger
+
+from src.constants import (
+    PATH_LOGS_PARSING_CONTRACT,
+    PATH_LOGS_PROBLEM_CONTRACT,
+    PATH_SPLIT_DATA_CONTRACT,
+    PATH_RAW_DATA_CONTRACT,
+)
 
 
 class ParsingDataContract:
@@ -16,7 +24,7 @@ class ParsingDataContract:
         self,
         path_df: str,
         path_output: str,
-        path_dir_log: str,
+        path_log: str,
         path_contract_problem: str,
         proxy: str = None,
         continue_parsing: bool = False,
@@ -26,7 +34,7 @@ class ParsingDataContract:
         """
         self.path_df = path_df
         self.path_output = path_output
-        self.path_dir_log = path_dir_log
+        self.path_log = path_log
         self.continue_parsing = continue_parsing
         self.proxy = proxy
         self.path_contract_problem = path_contract_problem
@@ -93,28 +101,12 @@ class ParsingDataContract:
         ]
 
     def initialize(self):
-        dir_name = os.path.basename(os.path.dirname(self.path_df))
-        self.path_output = os.path.join(
-            self.path_output, dir_name, os.path.basename(self.path_df)
-        )
-
-        # убрать этот код и добавить потом в общий
-        if not os.path.exists(os.path.dirname(self.path_output)):
-            os.makedirs(os.path.dirname(self.path_output))
-
         if not os.path.exists(self.path_output) or not self.continue_parsing:
             pd.DataFrame(columns=self.list_columns_table).to_csv(
                 self.path_output, index=False, sep="|"
             )
 
         self.df_input = pd.read_csv(self.path_df, sep="|", dtype="str")
-
-        self.path_contract_problem = os.path.join(
-            self.path_contract_problem, dir_name, os.path.basename(self.path_df)
-        )
-
-        if not os.path.exists(os.path.dirname(self.path_contract_problem)):
-            os.makedirs(os.path.dirname(self.path_contract_problem))
 
         if not os.path.exists(self.path_contract_problem) or not self.continue_parsing:
             columns_prob = list(self.df_input.columns)
@@ -124,7 +116,7 @@ class ParsingDataContract:
             )
         self.df_problem = pd.read_csv(self.path_contract_problem, sep="|", dtype="str")
 
-        self.init_logger()
+        self.logger_print, self.logger = self.make_logger(self.path_log)
 
         if self.continue_parsing:
             self.make_continue_parsing()
@@ -139,33 +131,24 @@ class ParsingDataContract:
         self.df_input = self.df_input[self.df_input.index >= last_index].reset_index(drop=True)
         df_output.iloc[:-1].to_csv(self.path_output, sep="|", index=False)
 
-    def init_logger(self) -> None:
-        """
-        Метод создает 2 логера, logger пишит данные в только в файл,
-        logger_print пишит еще и в консоль
-        """
-        dir_name = os.path.basename(os.path.dirname(self.path_output))
-        self.file_name = os.path.basename(self.path_output).removesuffix(".csv")
-        file_log = os.path.join(
-            self.path_dir_log,
-            f"{dir_name}_{self.file_name}",
-        )
-
-        file_log = logging.FileHandler(f"{file_log}.log", mode="a")
+    def make_logger(self, path_for_file_log: str) -> tuple[Logger]:
+        file_log = logging.FileHandler(path_for_file_log, mode="a")
         console_out = logging.StreamHandler()
         formatter = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
         file_log.setFormatter(formatter)
 
         # логер который выводит также данные в консоль
-        self.logger_print = logging.getLogger(f"{__name__}_print")
-        self.logger_print.setLevel(logging.INFO)
-        self.logger_print.addHandler(file_log)
-        self.logger_print.addHandler(console_out)
+        logger_print = logging.getLogger(f"{__name__}_print")
+        logger_print.setLevel(logging.INFO)
+        logger_print.addHandler(file_log)
+        logger_print.addHandler(console_out)
 
         # просто логер
-        self.logger = logging.getLogger(f"{__name__}")
-        self.logger.setLevel(logging.INFO)
-        self.logger.addHandler(file_log)
+        logger = logging.getLogger(f"{__name__}")
+        logger.setLevel(logging.INFO)
+        logger.addHandler(file_log)
+
+        return logger_print, logger
 
     def get_page(self, url: str) -> BeautifulSoup:
         """
@@ -1137,16 +1120,21 @@ class ParsingDataContract:
         self.logger_print.info(f"Успешно завершено {self.file_name}")
 
 
-def test():
+def test(input_file):
+    path_df = os.path.join(PATH_SPLIT_DATA_CONTRACT, input_file)
+    path_output = os.path.join(PATH_RAW_DATA_CONTRACT, input_file)
+    path_log = os.path.join(PATH_LOGS_PARSING_CONTRACT, input_file.replace('.csv', '.log'))
+    path_contract_problem = os.path.join(PATH_LOGS_PROBLEM_CONTRACT, input_file)
+
     get_num = ParsingDataContract(
-        path_df="data/contract_number/split_data/contract/2022/10.csv",
-        path_output="data/raw_data/contract",
-        path_dir_log="logs/parsing_data",
-        path_contract_problem="data/contract_number/problem_contract/parsing_data",
+        path_df=path_df,
+        path_output=path_output,
+        path_log=path_log,
+        path_contract_problem=path_contract_problem,
         continue_parsing=True,
     )
     get_num.run()
 
 
 if __name__ == "__main__":
-    test()
+    test('2018/0.csv')

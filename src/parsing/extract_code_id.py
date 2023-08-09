@@ -2,13 +2,12 @@ import os
 
 import pandas as pd
 
+from src.constants import PATH_RAW_DATA_CONTRACT, PATH_CODE_ID, PATH_CACHE_CODE, PATH_CACHE_ID
+
 
 def extract_code_id(
     input_path: str, path_global_set_code: str, path_global_set_id: str, output_path: str
 ):
-    input_path = input_path.removesuffix("/")
-    output_path = output_path.removesuffix("/")
-
     for path in [path_global_set_code, path_global_set_id]:
         if not os.path.exists(path):
             file_name = os.path.basename(path)
@@ -43,20 +42,22 @@ def extract_code_id(
     list_id = list(set_id)
     list_code_type = ["Code"] * len(list_code) + ["Id"] * len(list_id)
     list_code.extend(list_id)
+
     df_code = pd.DataFrame({"code": list_code, "code_type": list_code_type})
+    df_code.to_csv(os.path.join(output_path), sep="|", index=False)
 
-    dir_name = os.path.basename(input_path)
-    output_path = os.path.join(output_path, dir_name)
 
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    df_code.to_csv(os.path.join(output_path, "code.csv"), sep="|", index=False)
+def test(input_dir: str):
+    input_path = os.path.join(PATH_RAW_DATA_CONTRACT, input_dir)
+    output_path = os.path.join(PATH_CODE_ID, f"{input_dir}.csv")
+
+    extract_code_id(
+        input_path=input_path,
+        output_path=output_path,
+        path_global_set_code=PATH_CACHE_CODE,
+        path_global_set_id=PATH_CACHE_ID,
+    )
 
 
 if __name__ == "__main__":
-    extract_code_id(
-        input_path="data/raw_data/contract/2014/",
-        path_global_set_code="data/global_cache/cache_code.csv",
-        path_global_set_id="data/global_cache/cache_id.csv",
-        output_path="data/contract_number/code_id",
-    )
+    test("2014")
