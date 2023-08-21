@@ -186,7 +186,7 @@ class PiplineParsing:
 
         elif data_type == "org":
             data_type_class = self.create_parsing_org_process
-            path_data = self.path_split_data_org
+            path_data = self.path_split_data_code
             path_success = self.path_logs_sucess_org
         else:
             print("Ошибка: Неверный аргумент data_type для start_parsing_data")
@@ -259,4 +259,4 @@ def test(input_dir: str, continue_work: bool = False):
 
 
 if __name__ == "__main__":
-    test("2014", continue_work=False)
+    test("2014", continue_work=True)

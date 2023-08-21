@@ -140,8 +140,12 @@ class ParsingOrg:
         for i in range(1, 11):
             try:
                 res = requests.get(
-                    url, headers={"User-Agent": UserAgent().random}, proxies=self.proxy
+                    url,
+                    headers={"User-Agent": UserAgent().random},
+                    proxies=self.proxy,
+                    timeout=0.1,
                 )
+                time.sleep(1)
             except requests.exceptions.ConnectionError:
                 if self.check_internet_every_n_sec(120, 10):
                     continue
@@ -668,8 +672,9 @@ class ParsingOrg:
         """
         try:
             soup = soup.find("span", class_="section__title", string="Почтовый адрес")
-            telephone = soup.parent.find("span", class_="section__info")
-            return self.remove_bad_symbols(telephone.get_text())
+            postal_adress = soup.parent.find("span", class_="section__info")
+            postal_adress = self.remove_bad_symbols(postal_adress)
+            return self.remove_bad_symbols(postal_adress.get_text())
         except AttributeError:
             return None
 
@@ -833,13 +838,13 @@ class ParsingOrg:
             self.find_another_info(soup_another)
             self.add_data_to_csv()
 
-        self.logger_print.info(f"Успешно завершено {self.file_name}")
+        self.logger_print.info("Успешно завершено")
 
 
 def test(input_file):
     path_df = os.path.join(PATH_SPLIT_DATA_CODE, input_file)
     path_output = os.path.join(PATH_RAW_DATA_ORG, input_file)
-    path_log = os.path.join(PATH_LOGS_PARSING_ORG, input_file.replace('.csv', '.log'))
+    path_log = os.path.join(PATH_LOGS_PARSING_ORG, input_file.replace(".csv", ".log"))
     path_org_problem = os.path.join(PATH_LOGS_PROBLEM_ORG, input_file)
 
     parsing_org = ParsingOrg(

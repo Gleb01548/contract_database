@@ -157,8 +157,12 @@ class ParsingDataContract:
         """
         for i in range(1, 11):
             try:
+                time.sleep(1)
                 res = requests.get(
-                    url, headers={"User-Agent": UserAgent().random}, proxies=self.proxy
+                    url,
+                    headers={"User-Agent": UserAgent().random},
+                    proxies=self.proxy,
+                    # timeout=0.1,
                 )
             except requests.exceptions.ConnectionError:
                 if self.check_internet_every_n_sec(120, 10):
@@ -264,7 +268,7 @@ class ParsingDataContract:
                 return re.search("[0-9]+", number[0])[0], None
         except AttributeError:
             self.logger.info("Не выделено Уникальный учетный номер организации")
-            return None
+            return None, None
 
     def find_id_customer(self, soup: BeautifulSoup) -> str:
         """
@@ -1111,7 +1115,10 @@ class ParsingDataContract:
             self.place_performance = self.find_place_performance(soup)
 
             # Информация о поставщиках
-            self.parsing_supplier(soup)
+            try:
+                self.parsing_supplier(soup)
+            except AttributeError:
+                self.logger.info("Не получилось считать информацию о поставщике")
 
             # Платежи и объекты закупки
             self.payment_info(number_contract)
@@ -1123,7 +1130,7 @@ class ParsingDataContract:
 def test(input_file):
     path_df = os.path.join(PATH_SPLIT_DATA_CONTRACT, input_file)
     path_output = os.path.join(PATH_RAW_DATA_CONTRACT, input_file)
-    path_log = os.path.join(PATH_LOGS_PARSING_CONTRACT, input_file.replace('.csv', '.log'))
+    path_log = os.path.join(PATH_LOGS_PARSING_CONTRACT, input_file.replace(".csv", ".log"))
     path_contract_problem = os.path.join(PATH_LOGS_PROBLEM_CONTRACT, input_file)
 
     get_num = ParsingDataContract(
@@ -1137,4 +1144,4 @@ def test(input_file):
 
 
 if __name__ == "__main__":
-    test('2018/0.csv')
+    test("2014/465.csv")
