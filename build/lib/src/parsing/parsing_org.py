@@ -47,6 +47,7 @@ class ParsingOrg:
             "access_blocking",
             "full_name",
             "short_name",
+            "adress",
             "code_registr",
             "date_registration",
             "date_last_change",
@@ -143,7 +144,6 @@ class ParsingOrg:
                     url,
                     headers={"User-Agent": UserAgent().random},
                     proxies=self.proxy,
-                    timeout=0.1,
                 )
                 time.sleep(1)
             except requests.exceptions.ConnectionError:
@@ -218,6 +218,16 @@ class ParsingOrg:
             )
             access = soup.parent.find("span", class_="section__info")
             return self.emove_bad_symbols(access.get_text())
+        except AttributeError:
+            # логии
+            return None
+
+    def find_adress(self, soup: BeautifulSoup) -> str:
+        try:
+            adress = soup.find("span", class_="section__title", string="Место нахождения")
+            adress = adress.parent.find("span", class_="section__info")
+            adress = self.remove_bad_symbols(adress.get_text())
+            return self.remove_bad_symbols(adress)
         except AttributeError:
             # логии
             return None
@@ -673,7 +683,7 @@ class ParsingOrg:
         try:
             soup = soup.find("span", class_="section__title", string="Почтовый адрес")
             postal_adress = soup.parent.find("span", class_="section__info")
-            postal_adress = self.remove_bad_symbols(postal_adress)
+            postal_adress = self.remove_bad_symbols(postal_adress.get_text())
             return self.remove_bad_symbols(postal_adress.get_text())
         except AttributeError:
             return None
@@ -733,6 +743,7 @@ class ParsingOrg:
             "access_blocking": self.access_blocking,
             "full_name": self.full_name,
             "short_name": self.short_name,
+            "adress": self.adress,
             "code_registr": self.code_registr,
             "date_registration": self.date_registration,
             "date_last_change": self.date_last_change,
@@ -813,6 +824,7 @@ class ParsingOrg:
             self.access_blocking = self.find_access_blocking(soup)
             self.full_name = self.find_full_name(soup)
             self.short_name = self.find_short_name(soup)
+            self.adress = self.find_adress(soup)
             self.code_registr = self.find_code_registr(soup)
             self.date_registration = self.find_date_registration(soup)
             self.date_last_change = self.find_date_last_change(soup)

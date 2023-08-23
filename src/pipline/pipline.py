@@ -21,6 +21,8 @@ from src.constants import (
     PATH_LOGS_PARSING_ORG,
     PATH_LOGS_SUCESS_CONTRACT,
     PATH_LOGS_SUCESS_ORG,
+    PATH_LOGS_SUCESS_GET_NUM,
+    PATH_LOGS_SUCESS_EXTRACT_CODE,
     PATH_LOGS_PROBLEM_CONTRACT,
     PATH_LOGS_PROBLEM_ORG,
     PATH_DATA_FROM_SPENDGOV,
@@ -47,6 +49,10 @@ class PiplineParsing:
         self.load_check_proxy()
 
     def initialize(self):
+        # определяем обязательность пересоздания папок (удаление прошлых результатов работы
+        # программы)
+        self.necessarily_make_dir = not self.continue_work
+
         # пути для логгеров
         self.path_logs_pipline = os.path.join(PATH_LOGS_PIPLINE, f"pipline_{self.input_dir}.log")
         self.path_logs_get_num = os.path.join(PATH_LOGS_GET_NUM, f"{self.input_dir}.log")
@@ -54,6 +60,10 @@ class PiplineParsing:
         self.path_logs_org = os.path.join(PATH_LOGS_PARSING_ORG, self.input_dir)
         self.path_logs_sucess_contract = os.path.join(PATH_LOGS_SUCESS_CONTRACT, self.input_dir)
         self.path_logs_sucess_org = os.path.join(PATH_LOGS_SUCESS_ORG, self.input_dir)
+        self.path_logs_sucess_get_num = os.path.join(PATH_LOGS_SUCESS_GET_NUM, self.input_dir)
+        self.path_logs_sucess_extract_code = os.path.join(
+            PATH_LOGS_SUCESS_EXTRACT_CODE, self.input_dir
+        )
         self.path_logs_problem_contract = os.path.join(PATH_LOGS_PROBLEM_CONTRACT, self.input_dir)
         self.path_logs_problem_org = os.path.join(PATH_LOGS_PROBLEM_ORG, self.input_dir)
 
@@ -76,18 +86,42 @@ class PiplineParsing:
         self.creat_dir_if_not_exist(PATH_LOGS_GET_NUM)
         self.creat_dir_if_not_exist(self.path_logs_contract)
         self.creat_dir_if_not_exist(self.path_logs_org)
-        self.creat_dir_if_not_exist(self.path_logs_sucess_contract)
-        self.creat_dir_if_not_exist(self.path_logs_sucess_org)
+        self.creat_dir_if_not_exist(
+            self.path_logs_sucess_get_num, necessarily=self.necessarily_make_dir
+        )
+        self.creat_dir_if_not_exist(
+            self.path_logs_sucess_contract, necessarily=self.necessarily_make_dir
+        )
+        self.creat_dir_if_not_exist(
+            self.path_logs_sucess_extract_code, necessarily=self.necessarily_make_dir
+        )
+        self.creat_dir_if_not_exist(
+            self.path_logs_sucess_org, necessarily=self.necessarily_make_dir
+        )
+
         self.creat_dir_if_not_exist(self.path_logs_problem_contract)
         self.creat_dir_if_not_exist(self.path_logs_problem_org)
 
         # создаем папки под результаты программы
-        self.creat_dir_if_not_exist(self.path_split_data_contract)
-        self.creat_dir_if_not_exist(self.path_split_data_code)
-        self.creat_dir_if_not_exist(self.path_raw_data_contract)
-        self.creat_dir_if_not_exist(self.path_raw_data_org)
+        self.creat_dir_if_not_exist(
+            self.path_split_data_contract, necessarily=self.necessarily_make_dir
+        )
+        self.creat_dir_if_not_exist(
+            self.path_split_data_code, necessarily=self.necessarily_make_dir
+        )
+        self.creat_dir_if_not_exist(
+            self.path_raw_data_contract, necessarily=self.necessarily_make_dir
+        )
+        self.creat_dir_if_not_exist(self.path_raw_data_org, necessarily=self.necessarily_make_dir)
 
+        # создаем логгеры
         self.logger_print, self.logger = self.make_logger(self.path_logs_pipline)
+
+        # создаем доп. пути для файлов
+        self.path_logs_sucess_get_num = os.path.join(self.path_logs_sucess_get_num, "succes.csv")
+        self.path_logs_sucess_extract_code = os.path.join(
+            self.path_logs_sucess_extract_code, "succes.csv"
+        )
 
         if not self.continue_work:
             self.get_num = GetNum(
@@ -115,8 +149,8 @@ class PiplineParsing:
 
         return logger_print, logger
 
-    def creat_dir_if_not_exist(self, path: str):
-        if not os.path.exists(path):
+    def creat_dir_if_not_exist(self, path: str, necessarily: bool = False):
+        if not os.path.exists(path) or necessarily:
             os.mkdir(path)
 
     def load_check_proxy(self):
@@ -216,7 +250,7 @@ class PiplineParsing:
             process.join()
 
     def run(self):
-        if not self.continue_work:
+        if not os.path.exists(self.path_logs_sucess_get_num):
             self.logger_print.info("Извлечение номеров контрактов и их разбивка")
             self.get_num.run()
             print(self.path_numbers)
@@ -228,29 +262,34 @@ class PiplineParsing:
             )
             self.logger_print.info("Извлечение номеров контрактов и их разбивка завершена")
             del self.get_num
+            pd.DataFrame().to_csv(self.path_logs_sucess_get_num)
 
         self.logger_print.info("Начало парсинга контрактов")
         self.start_parsing_data(data_type="contract", continue_parsing=self.continue_work)
         self.logger_print.info("Парсинг контрактов завершен")
 
         self.logger_print.info("Извлечение кодов заказчиков и их разбивка")
-        extract_code_id(
-            input_path=self.path_raw_data_contract,
-            path_global_set_code=self.path_cache_code,
-            path_global_set_id=self.path_cache_id,
-            output_path=self.path_code_id,
-        )
 
-        split_data(
-            path_data=self.path_code_id,
-            path_output=self.path_split_data_code,
-            n_split=50,
-        )
+        if not os.path.exists(self.path_logs_sucess_extract_code):
+            extract_code_id(
+                input_path=self.path_raw_data_contract,
+                path_global_set_code=self.path_cache_code,
+                path_global_set_id=self.path_cache_id,
+                output_path=self.path_code_id,
+            )
+
+            split_data(
+                path_data=self.path_code_id,
+                path_output=self.path_split_data_code,
+                n_split=50,
+            )
+            pd.DataFrame().to_csv(self.path_logs_sucess_extract_code)
+
         self.logger_print.info("Извлечение кодов заказчиков и их разбивка завершена")
 
         self.logger_print.info("Начало парсинга заказчиков")
         self.start_parsing_data(data_type="org", continue_parsing=self.continue_work)
-        self.logger_print.info("Парсинг контрактов завершен")
+        self.logger_print.info("Парсинг заказчиков завершен")
 
 
 def test(input_dir: str, continue_work: bool = False):

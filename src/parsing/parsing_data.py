@@ -573,10 +573,20 @@ class ParsingDataContract:
         Дата начала исполнения контракта
         """
         try:
-            soup = soup.find("span", string="Дата начала исполнения контракта")
-            date = soup.parent.find("span", class_="section__info")
+            soup_new = soup.find("span", string="Дата начала исполнения контракта")
+            date = soup_new.parent.find("span", class_="section__info")
             date = date.get_text()
-            return self.remove_bad_symbols(date)
+            date = self.remove_bad_symbols(date)
+            
+            if date == "Дата начала исполнения контракта":
+                soup = soup.find(
+                    "span", string="Дата начала исполнения контракта", class_="section__title"
+                )
+                date = soup.parent.find("span", class_="section__info")
+                date = date.get_text()
+                date = self.remove_bad_symbols(date)
+
+            return date
         except AttributeError:
             self.logger.info("Не выделено Дата начала исполнения контракта")
             return None
@@ -586,10 +596,20 @@ class ParsingDataContract:
         Дата окончания исполнения контракта
         """
         try:
-            soup = soup.find("span", string="Дата окончания исполнения контракта")
-            date = soup.parent.find("span", class_="section__info")
+            soup_new = soup.find("span", string="Дата окончания исполнения контракта")
+            date = soup_new.parent.find("span", class_="section__info")
             date = date.get_text()
-            return self.remove_bad_symbols(date)
+            date = self.remove_bad_symbols(date)
+
+            if date == "Дата окончания исполнения контракта":
+                soup = soup.find(
+                    "span", string="Дата окончания исполнения контракта", class_="section__title"
+                )
+                date = soup.parent.find("span", class_="section__info")
+                date = date.get_text()
+                date = self.remove_bad_symbols(date)
+                
+            return date
         except AttributeError:
             self.logger.info("Не выделено Дата окончания исполнения контракта")
             return None
