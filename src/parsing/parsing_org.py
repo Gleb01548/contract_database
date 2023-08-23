@@ -145,7 +145,7 @@ class ParsingOrg:
                     headers={"User-Agent": UserAgent().random},
                     proxies=self.proxy,
                 )
-                time.sleep(1)
+                time.sleep(1.2)
             except requests.exceptions.ConnectionError:
                 if self.check_internet_every_n_sec(120, 10):
                     continue
@@ -834,7 +834,7 @@ class ParsingOrg:
             self.oktmo = self.find_oktmo(soup)
             self.location = self.find_location(soup)
             self.iky = self.find_iky(soup)
-            self.date_iky = self.find_iky(soup)
+            self.date_iky = self.find_date_iky(soup)
             self.code_okfs = self.find_code_okfs(soup)
             self.name_property = self.find_name_property(soup)
             self.okpf_code = self.find_okfd_code(soup)

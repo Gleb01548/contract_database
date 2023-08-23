@@ -157,7 +157,7 @@ class ParsingDataContract:
         """
         for i in range(1, 11):
             try:
-                time.sleep(1)
+                time.sleep(1.2)
                 res = requests.get(
                     url,
                     headers={"User-Agent": UserAgent().random},
