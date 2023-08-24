@@ -100,8 +100,12 @@ class PiplineParsing:
             self.path_logs_sucess_org, necessarily=self.necessarily_make_dir
         )
 
-        self.creat_dir_if_not_exist(self.path_logs_problem_contract)
-        self.creat_dir_if_not_exist(self.path_logs_problem_org)
+        self.creat_dir_if_not_exist(
+            self.path_logs_problem_contract, necessarily=self.necessarily_make_dir
+        )
+        self.creat_dir_if_not_exist(
+            self.path_logs_problem_org, necessarily=self.necessarily_make_dir
+        )
 
         # создаем папки под результаты программы
         self.creat_dir_if_not_exist(
@@ -154,8 +158,8 @@ class PiplineParsing:
         if not os.path.exists(path):
             os.mkdir(path)
         elif necessarily:
-            os.remove(path)
             shutil.rmtree(path)
+            os.mkdir(path)
 
     def load_check_proxy(self):
         list_proxy = pd.read_csv(PATH_PROXY_LIST, header=None, dtype=str)[0].to_list()
