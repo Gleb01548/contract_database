@@ -50,8 +50,8 @@ class ParsingDataContract:
             "adress_customer",
             "full_name_customer",
             "short_name_customer",
-            "unique_site_code",
-            "unique_site_id",
+            "code",
+            "code_type",
             "id_customer",
             "inn_customer",
             "kpp_customer",
@@ -263,9 +263,9 @@ class ParsingDataContract:
                 if number is None:
                     return None, None
                 else:
-                    return None, re.search("[0-9]+", number[0])[0]
+                    return re.search("[0-9]+", number[0])[0], "Id"
             else:
-                return re.search("[0-9]+", number[0])[0], None
+                return re.search("[0-9]+", number[0])[0], "Code"
         except AttributeError:
             self.logger.info("Не выделено Уникальный учетный номер организации")
             return None, None
@@ -577,7 +577,7 @@ class ParsingDataContract:
             date = soup_new.parent.find("span", class_="section__info")
             date = date.get_text()
             date = self.remove_bad_symbols(date)
-            
+
             if date == "Дата начала исполнения контракта":
                 soup = soup.find(
                     "span", string="Дата начала исполнения контракта", class_="section__title"
@@ -608,7 +608,7 @@ class ParsingDataContract:
                 date = soup.parent.find("span", class_="section__info")
                 date = date.get_text()
                 date = self.remove_bad_symbols(date)
-                
+
             return date
         except AttributeError:
             self.logger.info("Не выделено Дата окончания исполнения контракта")
@@ -1012,8 +1012,8 @@ class ParsingDataContract:
             "adress_customer": self.adress_customer,
             "full_name_customer": self.full_name_customer,
             "short_name_customer": self.short_name_customer,
-            "unique_site_code": self.unique_site_code,
-            "unique_site_id": self.unique_site_id,
+            "code": self.code,
+            "code_type": self.code_type,
             "id_customer": self.id_customer,
             "inn_customer": self.inn_customer,
             "kpp_customer": self.kpp_customer,
@@ -1097,7 +1097,7 @@ class ParsingDataContract:
             self.number_contract = number_contract
             self.full_name_customer = self.find_full_name_customer(soup)
             self.short_name_customer = self.find_short_name_customer(soup)
-            self.unique_site_code, self.unique_site_id = self.find_unique_account_number(soup)
+            self.code, self.code_type = self.find_unique_account_number(soup)
             self.id_customer = self.find_id_customer(soup)
             self.inn_customer = self.find_inn_customer(soup)
             self.kpp_customer = self.find_kpp_customer(soup)

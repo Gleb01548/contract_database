@@ -55,7 +55,6 @@ class ParsingOrg:
             "kpp",
             "ogrn",
             "oktmo",
-            "location",
             "iky",
             "date_iky",
             "code_okfs",
@@ -362,22 +361,6 @@ class ParsingOrg:
                     string="Код ОКТМО",
                 )
 
-            code = code.parent.find("span", class_="section__info")
-            code = self.remove_bad_symbols(code.get_text())
-            return code
-        except AttributeError:
-            return None
-
-    def find_location(self, soup: BeautifulSoup) -> str:
-        """
-        Место нахождения
-        """
-        try:
-            code = soup.find(
-                "span",
-                class_="section__title",
-                string="Место нахождения",
-            )
             code = code.parent.find("span", class_="section__info")
             code = self.remove_bad_symbols(code.get_text())
             return code
@@ -751,7 +734,6 @@ class ParsingOrg:
             "kpp": self.kpp,
             "ogrn": self.ogrn,
             "oktmo": self.oktmo,
-            "location": self.location,
             "iky": self.iky,
             "date_iky": self.date_iky,
             "code_okfs": self.code_okfs,
@@ -832,7 +814,6 @@ class ParsingOrg:
             self.kpp = self.find_kpp(soup)
             self.ogrn = self.find_ogrn(soup)
             self.oktmo = self.find_oktmo(soup)
-            self.location = self.find_location(soup)
             self.iky = self.find_iky(soup)
             self.date_iky = self.find_date_iky(soup)
             self.code_okfs = self.find_code_okfs(soup)

@@ -1,7 +1,8 @@
 import os
+import re
+
 import json
 from zipfile import ZipFile
-
 import logging
 import pandas as pd
 from tqdm import tqdm
@@ -53,6 +54,10 @@ class GetNum:
             )
         print("Подготовка кэша")
         self.make_cache()
+
+    def remove_bad_symbols(self, string: str) -> str:
+        string = re.sub("\n|\||\xa0", "", string.strip())
+        return " ".join(string.split())
 
     def make_logger(self, path_for_file_log: str) -> tuple[Logger]:
         file_log = logging.FileHandler(path_for_file_log, mode="a")
@@ -128,6 +133,8 @@ class GetNum:
 
             if customer_data is not None:
                 adress_customer = customer_data.get("postalAddress")
+                if adress_customer:
+                    adress_customer = self.remove_bad_symbols(adress_customer)
                 inn_customer = customer_data.get("inn")
 
                 pd.DataFrame(

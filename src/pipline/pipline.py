@@ -150,7 +150,10 @@ class PiplineParsing:
         return logger_print, logger
 
     def creat_dir_if_not_exist(self, path: str, necessarily: bool = False):
-        if not os.path.exists(path) or necessarily:
+        if not os.path.exists(path):
+            os.mkdir(path)
+        elif necessarily:
+            os.remove(path)
             os.mkdir(path)
 
     def load_check_proxy(self):
@@ -298,4 +301,4 @@ def test(input_dir: str, continue_work: bool = False):
 
 
 if __name__ == "__main__":
-    test("2014", continue_work=True)
+    test("2014", continue_work=False)

@@ -17,33 +17,30 @@ def extract_code_id(
 
     global_set_code = set(pd.read_csv(path_global_set_code, sep="|", dtype="str")["number"])
     global_set_id = set(pd.read_csv(path_global_set_id, sep="|", dtype="str")["number"])
-    set_code = set()
-    set_id = set()
+    list_result_code = []
+    list_result_type_code = []
     for name in os.listdir(input_path):
         if name.endswith(".csv"):
             df = pd.read_csv(
                 os.path.join(input_path, name),
                 sep="|",
                 dtype="str",
-                usecols=["unique_site_code", "unique_site_id"],
+                usecols=["code", "code_type"],
             )
-            df.fillna("0", inplace=True)
-            for col_name in ["unique_site_code", "unique_site_id"]:
-                buffer_set = set(df[col_name])
-                if col_name == "unique_site_code":
-                    buffer_set -= global_set_code
-                    buffer_set -= set(["0"])
-                    set_code.update(buffer_set)
-                else:
-                    buffer_set -= global_set_id
-                    buffer_set -= set(["0"])
-                    set_id.update(buffer_set)
-    list_code = list(set_code)
-    list_id = list(set_id)
-    list_code_type = ["Code"] * len(list_code) + ["Id"] * len(list_id)
-    list_code.extend(list_id)
+            for index in range(len(df)):
+                code = df.loc[index, "code"]
+                code_type = df.loc[index, "code_type"]
 
-    df_code = pd.DataFrame({"code": list_code, "code_type": list_code_type})
+                if code_type == "Code" and code not in global_set_code:
+                    list_result_code.append(code)
+                    list_result_type_code.append("Code")
+                    global_set_code.add(code)
+                elif code_type == "Id" and code not in global_set_id:
+                    list_result_code.append(code)
+                    list_result_type_code.append("Id")
+                    global_set_id.add(code)
+
+    df_code = pd.DataFrame({"code": list_result_code, "code_type": list_result_type_code})
     df_code.to_csv(os.path.join(output_path), sep="|", index=False)
 
 
