@@ -730,7 +730,7 @@ class ParsingOrg:
             "code_registr": self.code_registr,
             "date_registration": self.date_registration,
             "date_last_change": self.date_last_change,
-            "inn": self.inn,
+            "inn_customer": self.inn,
             "kpp": self.kpp,
             "ogrn": self.ogrn,
             "oktmo": self.oktmo,

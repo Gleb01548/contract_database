@@ -51,7 +51,7 @@ class ParsingOrg:
             "code_registr",
             "date_registration",
             "date_last_change",
-            "inn",
+            "inn_customer",
             "kpp",
             "ogrn",
             "oktmo",
