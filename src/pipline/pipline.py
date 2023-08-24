@@ -1,4 +1,5 @@
 import os
+import shutil
 from multiprocessing import Process, Manager
 
 import logging
@@ -154,7 +155,7 @@ class PiplineParsing:
             os.mkdir(path)
         elif necessarily:
             os.remove(path)
-            os.mkdir(path)
+            shutil.rmtree(path)
 
     def load_check_proxy(self):
         list_proxy = pd.read_csv(PATH_PROXY_LIST, header=None, dtype=str)[0].to_list()
