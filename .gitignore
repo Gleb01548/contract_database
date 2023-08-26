@@ -4,3 +4,7 @@ data/
 logs
 data
 .vscode
+build
+src/pullenti
+pullenti
+notebook/pullenti

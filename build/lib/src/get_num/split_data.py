@@ -4,8 +4,6 @@ import math
 import pandas as pd
 
 from src.constants import (
-    PATH_NUMBERS,
-    PATH_SPLIT_DATA_CONTRACT,
     PATH_CODE_ID,
     PATH_SPLIT_DATA_CODE,
 )
@@ -52,8 +50,6 @@ def split_data(
 def test(input_file: str):
     path_data = os.path.join(PATH_CODE_ID, f"{input_file}.csv")
     path_output = os.path.join(PATH_SPLIT_DATA_CODE, input_file)
-    print(path_data)
-    print(path_output)
     split_data(path_data=path_data, path_output=path_output, n_split=10)
 
 

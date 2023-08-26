@@ -47,7 +47,7 @@ class ParsingOrg:
             "access_blocking",
             "full_name_customer",
             "short_name_customer",
-            "adress_customer",
+            "address_customer",
             "code_registr",
             "date_registration",
             "date_last_change",
@@ -71,7 +71,7 @@ class ParsingOrg:
             "budget_name",
             "telephone",
             "fax",
-            "postal_adress",
+            "postal_address",
             "email",
             "site",
             "contact_person",
@@ -221,12 +221,12 @@ class ParsingOrg:
             # логии
             return None
 
-    def find_adress(self, soup: BeautifulSoup) -> str:
+    def find_address(self, soup: BeautifulSoup) -> str:
         try:
-            adress = soup.find("span", class_="section__title", string="Место нахождения")
-            adress = adress.parent.find("span", class_="section__info")
-            adress = self.remove_bad_symbols(adress.get_text())
-            return self.remove_bad_symbols(adress)
+            address = soup.find("span", class_="section__title", string="Место нахождения")
+            address = address.parent.find("span", class_="section__info")
+            address = self.remove_bad_symbols(address.get_text())
+            return self.remove_bad_symbols(address)
         except AttributeError:
             # логии
             return None
@@ -659,15 +659,15 @@ class ParsingOrg:
         except AttributeError:
             return None
 
-    def find_postal_adress(self, soup: BeautifulSoup) -> str:
+    def find_postal_address(self, soup: BeautifulSoup) -> str:
         """
         Почтовый адрес
         """
         try:
             soup = soup.find("span", class_="section__title", string="Почтовый адрес")
-            postal_adress = soup.parent.find("span", class_="section__info")
-            postal_adress = self.remove_bad_symbols(postal_adress.get_text())
-            return self.remove_bad_symbols(postal_adress.get_text())
+            postal_address = soup.parent.find("span", class_="section__info")
+            postal_address = self.remove_bad_symbols(postal_address.get_text())
+            return self.remove_bad_symbols(postal_address.get_text())
         except AttributeError:
             return None
 
@@ -726,11 +726,11 @@ class ParsingOrg:
             "access_blocking": self.access_blocking,
             "full_name_customer": self.full_name,
             "short_name_customer": self.short_name,
-            "adress_customer": self.adress,
+            "address_customer": self.address,
             "code_registr": self.code_registr,
             "date_registration": self.date_registration,
             "date_last_change": self.date_last_change,
-            "inn": self.inn,
+            "inn_customer": self.inn,
             "kpp": self.kpp,
             "ogrn": self.ogrn,
             "oktmo": self.oktmo,
@@ -750,7 +750,7 @@ class ParsingOrg:
             "budget_name": self.budget_name,
             "telephone": self.telephone,
             "fax": self.fax,
-            "postal_adress": self.postal_adress,
+            "postal_address": self.postal_address,
             "email": self.email,
             "site": self.site,
             "contact_person": self.contact_person,
@@ -783,7 +783,7 @@ class ParsingOrg:
         self.budget_code, self.budget_name = self.parsing_budget_table(soup_another)
         self.telephone = self.find_telephone(soup_another)
         self.fax = self.find_fax(soup_another)
-        self.postal_adress = self.find_postal_adress(soup_another)
+        self.postal_address = self.find_postal_address(soup_another)
         self.email = self.find_email(soup_another)
         self.site = self.find_site(soup_another)
         self.contact_person = self.find_contact_person(soup_another)
@@ -806,7 +806,7 @@ class ParsingOrg:
             self.access_blocking = self.find_access_blocking(soup)
             self.full_name = self.find_full_name(soup)
             self.short_name = self.find_short_name(soup)
-            self.adress = self.find_adress(soup)
+            self.address = self.find_address(soup)
             self.code_registr = self.find_code_registr(soup)
             self.date_registration = self.find_date_registration(soup)
             self.date_last_change = self.find_date_last_change(soup)

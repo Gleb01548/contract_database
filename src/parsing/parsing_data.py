@@ -47,7 +47,7 @@ class ParsingDataContract:
 
         self.list_columns_table = [
             "number_contract",
-            "adress_customer",
+            "address_customer",
             "full_name_customer",
             "short_name_customer",
             "code",
@@ -93,8 +93,8 @@ class ParsingDataContract:
             "date_registration_supplier",
             "country_supplier",
             "code_country_supplier",
-            "adress_supplier",
-            "postal_adress_supplier",
+            "address_supplier",
+            "postal_address_supplier",
             "contact",
             "status_supplier",
             "kbk",
@@ -829,26 +829,26 @@ class ParsingDataContract:
             self.logger.info("Не выделено Страна, код")
             return (None, None)
 
-    def find_adress_supplier(self, soup: BeautifulSoup) -> str:
+    def find_address_supplier(self, soup: BeautifulSoup) -> str:
         """
         Адрес Места нахождения
         """
         try:
-            adress = soup.get_text()
-            adress = self.remove_bad_symbols(adress)
-            return self.remove_bad_symbols(adress)
+            address = soup.get_text()
+            address = self.remove_bad_symbols(address)
+            return self.remove_bad_symbols(address)
         except AttributeError:
             self.logger.info("Не выделено Адрес Места нахождения")
             return None
 
-    def find_postal_adress_supplier(self, soup: BeautifulSoup) -> str:
+    def find_postal_address_supplier(self, soup: BeautifulSoup) -> str:
         """
         Почтовый адресс
         """
         try:
-            adress = soup.get_text()
-            adress = self.remove_bad_symbols(adress)
-            return self.remove_bad_symbols(adress)
+            address = soup.get_text()
+            address = self.remove_bad_symbols(address)
+            return self.remove_bad_symbols(address)
         except AttributeError:
             self.logger.info("Не выделено Почтовый адресс")
             return None
@@ -961,7 +961,7 @@ class ParsingDataContract:
         self.date_registration_supplier = None
         self.country_supplier = None
         self.code_country_supplier = None
-        self.postal_adress_supplier = None
+        self.postal_address_supplier = None
         self.contact = None
         self.status_supplier = None
 
@@ -989,11 +989,11 @@ class ParsingDataContract:
                 continue
 
             if "Адрес места нахождения" in name_columns:
-                self.adress_supplier = self.find_adress_supplier(list_table_values[i_step])
+                self.address_supplier = self.find_address_supplier(list_table_values[i_step])
                 continue
 
             if "Почтовый адрес" in name_columns:
-                self.postal_adress_supplier = self.find_postal_adress_supplier(
+                self.postal_address_supplier = self.find_postal_address_supplier(
                     list_table_values[i_step]
                 )
                 continue
@@ -1009,7 +1009,7 @@ class ParsingDataContract:
     def add_data_to_csv(self):
         self.dict_columns_table = {
             "number_contract": self.number_contract,
-            "adress_customer": self.adress_customer,
+            "address_customer": self.address_customer,
             "full_name_customer": self.full_name_customer,
             "short_name_customer": self.short_name_customer,
             "code": self.code,
@@ -1055,8 +1055,8 @@ class ParsingDataContract:
             "date_registration_supplier": self.date_registration_supplier,
             "country_supplier": self.country_supplier,
             "code_country_supplier": self.code_country_supplier,
-            "adress_supplier": self.adress_supplier,
-            "postal_adress_supplier": self.postal_adress_supplier,
+            "address_supplier": self.address_supplier,
+            "postal_address_supplier": self.postal_address_supplier,
             "contact": self.contact,
             "status_supplier": self.status_supplier,
             "kbk": self.kbk,
@@ -1070,7 +1070,7 @@ class ParsingDataContract:
     def add_to_csv_problem(self, commentary: str):
         self.dict_columns_table_problem = {
             "number_contract": self.number_contract,
-            "adress_customer": self.adress_customer,
+            "address_customer": self.address_customer,
             "inn_customer": self.inn_customer,
             "commentary": commentary,
         }
@@ -1084,7 +1084,7 @@ class ParsingDataContract:
         for index in tqdm(range(len(self.df_input))):
             number_contract = self.df_input.loc[index, "number_contract"]
             self.logger.info(f"number_contract {number_contract}")
-            self.adress_customer = self.df_input.loc[index, "adress_customer"]
+            self.address_customer = self.df_input.loc[index, "address_customer"]
             self.inn_customer = self.df_input.loc[index, "inn_customer"]
 
             soup = self.get_page(f"{self.url_info}{number_contract}")

@@ -49,7 +49,7 @@ class GetNum:
         self.logger_print, self.logger = self.make_logger(path_log)
 
         if not os.path.exists(self.path_name_result) or drop_last:
-            pd.DataFrame(columns=["number_contract", "adress_customer", "inn_customer"]).to_csv(
+            pd.DataFrame(columns=["number_contract", "address_customer", "inn_customer"]).to_csv(
                 f"{self.path_name_result}", index=False, sep="|"
             )
         print("Подготовка кэша")
@@ -132,15 +132,15 @@ class GetNum:
             customer_data = line.get("customer")
 
             if customer_data is not None:
-                adress_customer = customer_data.get("postalAddress")
-                if adress_customer:
-                    adress_customer = self.remove_bad_symbols(adress_customer)
+                address_customer = customer_data.get("postalAddress")
+                if address_customer:
+                    address_customer = self.remove_bad_symbols(address_customer)
                 inn_customer = customer_data.get("inn")
 
                 pd.DataFrame(
                     {
                         "number_contract": [number_contract],
-                        "adress_customer": [adress_customer],
+                        "address_customer": [address_customer],
                         "inn_customer": [inn_customer],
                     },
                 ).to_csv(self.path_name_result, mode="a", index=False, header=False, sep="|")

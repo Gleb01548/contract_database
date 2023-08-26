@@ -20,4 +20,4 @@ PATH_PROXY_LIST = "data/proxy.csv"
 
 PATH_CACHE_CODE = "data/cache/cache_code.csv"
 PATH_CACHE_ID = "data/cache/cache_id.csv"
-PATH_CACHE_ADRESS = "data/cache/cache_aderess.csv"
+PATH_CACHE_ADDRESS = "data/cache/cache_aderess.csv"

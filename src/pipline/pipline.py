@@ -35,7 +35,7 @@ from src.constants import (
     PATH_RAW_DATA_ORG,
     PATH_CACHE_CODE,
     PATH_CACHE_ID,
-    PATH_CACHE_ADRESS,
+    PATH_CACHE_ADDRESS,
     PATH_PROXY_LIST,
 )
 
@@ -80,7 +80,7 @@ class PiplineParsing:
         # пути в кэшу
         self.path_cache_code = PATH_CACHE_CODE
         self.path_cache_id = PATH_CACHE_ID
-        self.path_cache_adress = PATH_CACHE_ADRESS
+        self.path_cache_address = PATH_CACHE_ADDRESS
 
         # создаем папки для логги
         self.creat_dir_if_not_exist(PATH_LOGS_PIPLINE)
@@ -306,4 +306,4 @@ def test(input_dir: str, continue_work: bool = False):
 
 
 if __name__ == "__main__":
-    test("2014", continue_work=False)
+    test("2014", continue_work=True)
