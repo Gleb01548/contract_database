@@ -289,7 +289,7 @@ class PiplineParsing:
             split_data(
                 path_data=self.path_code_id,
                 path_output=self.path_split_data_code,
-                n_split=50,
+                n_split=60,
             )
             pd.DataFrame().to_csv(self.path_logs_sucess_extract_code)
 
