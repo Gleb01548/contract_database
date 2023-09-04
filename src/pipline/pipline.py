@@ -128,13 +128,6 @@ class PiplineParsing:
             self.path_logs_sucess_extract_code, "succes.csv"
         )
 
-        if not self.continue_work:
-            self.get_num = GetNum(
-                path_dir_input=self.path_data_from_spendgov,
-                path_name_result=self.path_numbers,
-                path_log=self.path_logs_get_num,
-            )
-
     def make_logger(self, path_for_file_log: str) -> tuple[Logger]:
         file_log = logging.FileHandler(path_for_file_log, mode="a")
         console_out = logging.StreamHandler()
@@ -259,10 +252,13 @@ class PiplineParsing:
 
     def run(self):
         if not os.path.exists(self.path_logs_sucess_get_num):
+            self.get_num = GetNum(
+                path_dir_input=self.path_data_from_spendgov,
+                path_name_result=self.path_numbers,
+                path_log=self.path_logs_get_num,
+            )
             self.logger_print.info("Извлечение номеров контрактов и их разбивка")
             self.get_num.run()
-            print(self.path_numbers)
-            print(self.path_split_data_contract)
             split_data(
                 path_data=self.path_numbers,
                 path_output=self.path_split_data_contract,
@@ -306,4 +302,4 @@ def test(input_dir: str, continue_work: bool = False):
 
 
 if __name__ == "__main__":
-    test("2014", continue_work=True)
+    test("2015", continue_work=True)
