@@ -6,6 +6,7 @@ data
 .vscode
 build
 src/pullenti
+src/processing/pullenti
 pullenti
 notebook/pullenti
 dist

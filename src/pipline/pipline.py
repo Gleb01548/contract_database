@@ -302,4 +302,4 @@ def test(input_dir: str, continue_work: bool = False):
 
 
 if __name__ == "__main__":
-    test("2015", continue_work=True)
+    test("2016", continue_work=True)
