@@ -4,6 +4,7 @@ import datetime
 
 import pandas as pd
 from pandas import DataFrame, Series
+from tqdm import tqdm
 
 from src import DecompositionAddress, make_logger
 from src.constants import (
@@ -22,7 +23,14 @@ from src.constants import (
     inn_fed,
     inn_mun,
     inn_another,
-    # name_for_result,
+    PATH_RAW_DATA_CONTRACT,
+    PATH_RAW_DATA_ORG,
+    PATH_PROCESSING_DATA_CONTRACT,
+    PATH_PROCESSING_DATA_ORG,
+    PATH_CACHE_ADDRESS,
+    PATH_CACHE_ORG_ADDRESS,
+    PATH_KBK_TABLE,
+    PATH_LOGS_PROCESSING,
 )
 
 
@@ -460,3 +468,42 @@ class ProcessingData:
             result_type="expand",
         )
         df.to_csv(path_output, sep="|", index=False)
+
+
+if __name__ == "__main__":
+    n = 1
+    input_dir = "2014"
+    path_input_org = os.path.join(PATH_RAW_DATA_ORG, input_dir)
+    path_output_org = os.path.join(PATH_PROCESSING_DATA_ORG, input_dir)
+    path_input_contract = os.path.join(PATH_RAW_DATA_CONTRACT, input_dir)
+    path_output_contrcat = os.path.join(PATH_PROCESSING_DATA_CONTRACT, input_dir)
+
+    path_logs = os.path.join(PATH_LOGS_PROCESSING, input_dir)
+
+    processing_data = ProcessingData(
+        path_cache_address=PATH_CACHE_ADDRESS,
+        path_cache_org_address=PATH_CACHE_ORG_ADDRESS,
+        path_kbk_table=PATH_KBK_TABLE,
+        default_year_for_kbk=input_dir,
+        path_log=path_logs,
+    )
+
+    for file_input in tqdm(
+        sorted(os.listdir(path_input_org), key=lambda x: int(x.removesuffix(".csv")))[:n]
+    ):
+        file_output = os.path.join(path_output_org, file_input)
+        file_input = os.path.join(path_input_org, file_input)
+        processing_data.run_org(file_input, file_output)
+
+    print("данные по организациям обработаны")
+
+    for file_input in tqdm(
+        sorted(os.listdir(path_input_contract), key=lambda x: int(x.removesuffix(".csv")))[:n]
+    ):
+        file_output = os.path.join(path_output_contrcat, file_input)
+        file_input = os.path.join(path_input_contract, file_input)
+        print(file_output)
+        print(file_input)
+        processing_data.run_contract(file_input, file_output)
+
+    print("данные по контрактам обработаны")

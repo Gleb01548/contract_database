@@ -2,14 +2,13 @@ import os
 import re
 import time
 
-import logging
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from tqdm import tqdm
-from logging import Logger
 
+from src import make_logger
 from src.constants import (
     PATH_LOGS_PARSING_ORG,
     PATH_LOGS_PROBLEM_ORG,
@@ -93,7 +92,7 @@ class ParsingOrg:
             pd.DataFrame(columns=columns_prob).to_csv(self.path_org_problem, index=False, sep="|")
         self.df_problem = pd.read_csv(self.path_org_problem, sep="|", dtype="str")
 
-        self.logger_print, self.logger = self.make_logger(self.path_log)
+        self.logger_print, self.logger = make_logger(self.path_log)
 
         if self.continue_parsing:
             self.make_continue_parsing()
@@ -112,25 +111,6 @@ class ParsingOrg:
         last_index = self.df_input["code"].to_list().index(last_code)
         self.df_input = self.df_input[self.df_input.index >= last_index].reset_index(drop=True)
         df_output.iloc[:-1].to_csv(self.path_output, sep="|", index=False)
-
-    def make_logger(self, path_for_file_log: str) -> tuple[Logger]:
-        file_log = logging.FileHandler(path_for_file_log, mode="a")
-        console_out = logging.StreamHandler()
-        formatter = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
-        file_log.setFormatter(formatter)
-
-        # логер который выводит также данные в консоль
-        logger_print = logging.getLogger(f"{__name__}_print")
-        logger_print.setLevel(logging.INFO)
-        logger_print.addHandler(file_log)
-        logger_print.addHandler(console_out)
-
-        # просто логер
-        logger = logging.getLogger(f"{__name__}")
-        logger.setLevel(logging.INFO)
-        logger.addHandler(file_log)
-
-        return logger_print, logger
 
     def get_page(self, url: str) -> BeautifulSoup:
         """

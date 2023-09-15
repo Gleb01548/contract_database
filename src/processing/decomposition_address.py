@@ -3,6 +3,9 @@ import os
 import pandas as pd
 from pullenti.address.AddressService import AddressService
 
+if not AddressService.set_server_connection("http://localhost:2222"):
+    raise NameError("ВКЛЮЧИ СЕРВЕР pullenti")
+
 
 class DecompositionAddress:
     def __init__(self, path_for_cache: str, year: str):

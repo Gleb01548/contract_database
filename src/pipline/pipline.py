@@ -18,10 +18,10 @@ from src.constants import (
     PATH_LOGS_GET_NUM,
     PATH_LOGS_PARSING_CONTRACT,
     PATH_LOGS_PARSING_ORG,
-    PATH_LOGS_SUCESS_CONTRACT,
-    PATH_LOGS_SUCESS_ORG,
-    PATH_LOGS_SUCESS_GET_NUM,
-    PATH_LOGS_SUCESS_EXTRACT_CODE,
+    PATH_LOGS_SUCСESS_CONTRACT,
+    PATH_LOGS_SUCСESS_ORG,
+    PATH_LOGS_SUCСESS_GET_NUM,
+    PATH_LOGS_SUCСESS_EXTRACT_CODE,
     PATH_LOGS_PROBLEM_CONTRACT,
     PATH_LOGS_PROBLEM_ORG,
     PATH_DATA_FROM_SPENDGOV,
@@ -57,11 +57,11 @@ class PiplineParsing:
         self.path_logs_get_num = os.path.join(PATH_LOGS_GET_NUM, f"{self.input_dir}.log")
         self.path_logs_contract = os.path.join(PATH_LOGS_PARSING_CONTRACT, self.input_dir)
         self.path_logs_org = os.path.join(PATH_LOGS_PARSING_ORG, self.input_dir)
-        self.path_logs_sucess_contract = os.path.join(PATH_LOGS_SUCESS_CONTRACT, self.input_dir)
-        self.path_logs_sucess_org = os.path.join(PATH_LOGS_SUCESS_ORG, self.input_dir)
-        self.path_logs_sucess_get_num = os.path.join(PATH_LOGS_SUCESS_GET_NUM, self.input_dir)
+        self.path_logs_sucess_contract = os.path.join(PATH_LOGS_SUCСESS_CONTRACT, self.input_dir)
+        self.path_logs_sucess_org = os.path.join(PATH_LOGS_SUCСESS_ORG, self.input_dir)
+        self.path_logs_sucess_get_num = os.path.join(PATH_LOGS_SUCСESS_GET_NUM, self.input_dir)
         self.path_logs_sucess_extract_code = os.path.join(
-            PATH_LOGS_SUCESS_EXTRACT_CODE, self.input_dir
+            PATH_LOGS_SUCСESS_EXTRACT_CODE, self.input_dir
         )
         self.path_logs_problem_contract = os.path.join(PATH_LOGS_PROBLEM_CONTRACT, self.input_dir)
         self.path_logs_problem_org = os.path.join(PATH_LOGS_PROBLEM_ORG, self.input_dir)
