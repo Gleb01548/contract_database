@@ -5,7 +5,7 @@ import datetime
 import pandas as pd
 from pandas import DataFrame, Series
 
-from src import DecompositionAddress
+from src import DecompositionAddress, make_logger
 from src.constants import (
     dict_month,
     list_local,
@@ -33,6 +33,7 @@ class ProcessingData:
         path_cache_org_address: str,
         path_kbk_table: str,
         default_year_for_kbk: str,
+        path_log: str,
     ):
         self.address_dec = DecompositionAddress(
             path_for_cache=path_cache_address, year=default_year_for_kbk
@@ -73,6 +74,8 @@ class ProcessingData:
             "apartment",
             "room",
         ]
+
+        self.logger_print, self.logger = make_logger(path_log)
 
     def date_extract(self, date: str):  # noqa
         if not date or date == "--.--.----" or type(date) != str:
@@ -199,8 +202,10 @@ class ProcessingData:
             if len(value_code_type_expenses):
                 dict_kbk["value_code_type_expenses"] = value_code_type_expenses[0]
             else:
-                pass
-                # логи
+                self.logger.warning(
+                    f"Не найдено значение кода вида расходов (value_code_type_expenses) для {code_type_expenses}"  # noqa
+                )
+
             dict_kbk["code_type_expenses"] = code_type_expenses
             return dict_kbk
 
@@ -228,7 +233,9 @@ class ProcessingData:
             if len(value_code_section):
                 dict_kbk["value_code_section"] = value_code_section[0]
             else:
-                pass
+                self.logger.warning(
+                    f"Не найдено значение кода вида расходов для value_code_section {value_code_section}, {year}"  # noqa
+                )
 
             value_code_sub = self.kbk_section.loc[
                 (self.kbk_section.year == year) & (self.kbk_section.code == code_section_sub),
@@ -237,15 +244,20 @@ class ProcessingData:
             if len(value_code_sub):
                 dict_kbk["value_code_sub"] = value_code_sub[0]
             else:
-                pass
+                self.logger.warning(
+                    f"Не найдено значение кода для value_code_sub {value_code_sub}, {year}"  # noqa
+                )
 
             value_code_type_expenses = self.kbk_type.loc[
                 self.kbk_type.code == code_type_expenses, "mean"
             ].to_list()
+
             if len(value_code_type_expenses):
                 dict_kbk["value_code_type_expenses"] = value_code_type_expenses[0]
             else:
-                pass
+                self.logger.warning(
+                    f"Не найдено значение кода для value_code_type_expenses {value_code_type_expenses}"  # noqa
+                )
 
             if code_national_project:
                 list_national_project = self.kbk_np.loc[
@@ -257,8 +269,9 @@ class ProcessingData:
                     dict_kbk["name_national_project"] = list_national_project[0]
                     dict_kbk["name_fed_national_project"] = list_national_project[1]
                 else:
-                    pass
-                    # логи
+                    self.logger.warning(
+                        f"Не найдено значение кода для code_national_project {code_national_project}, {year}"  # noqa
+                    )
 
             dict_kbk["code_main_admin"] = code_main_admin
             dict_kbk["code_section_sub"] = code_section_sub
@@ -295,7 +308,7 @@ class ProcessingData:
             if unique in self.cache_org_address:
                 return self.cache_org_address[unique]["address"]
             else:
-                # добавить логи
+                self.logger.warning(f"Нет адреса для {unique}")
                 return None
 
     def processing_date_org(self, df: Series, columns: list):

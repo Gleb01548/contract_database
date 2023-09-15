@@ -6,6 +6,9 @@ PATH_LOGS_SUCESS_CONTRACT = "logs/success/contract"
 PATH_LOGS_SUCESS_ORG = "logs/success/org"
 PATH_LOGS_SUCESS_GET_NUM = "logs/success/get_number"
 PATH_LOGS_SUCESS_EXTRACT_CODE = "logs/success/extract_code"
+PATH_LOGS_PROCESSING_CONTRACT = "logs/processing/contract"
+PATH_LOGS_PROCESSING_ORG = "logs/processing/org"
+
 PATH_LOGS_PROBLEM_CONTRACT = "logs/problem/contract"
 PATH_LOGS_PROBLEM_ORG = "logs/problem/org"
 

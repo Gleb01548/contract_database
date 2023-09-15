@@ -2,9 +2,7 @@ import os
 import shutil
 from multiprocessing import Process, Manager
 
-import logging
 import pandas as pd
-from logging import Logger
 
 from src import (
     GetNum,
@@ -13,8 +11,8 @@ from src import (
     extract_code_id,
     ParsingOrg,
     test_proxy,
+    make_logger,
 )
-
 from src.constants import (
     PATH_LOGS_PIPLINE,
     PATH_LOGS_GET_NUM,
@@ -120,32 +118,13 @@ class PiplineParsing:
         self.creat_dir_if_not_exist(self.path_raw_data_org, necessarily=self.necessarily_make_dir)
 
         # создаем логгеры
-        self.logger_print, self.logger = self.make_logger(self.path_logs_pipline)
+        self.logger_print, self.logger = make_logger(self.path_logs_pipline)
 
         # создаем доп. пути для файлов
         self.path_logs_sucess_get_num = os.path.join(self.path_logs_sucess_get_num, "succes.csv")
         self.path_logs_sucess_extract_code = os.path.join(
             self.path_logs_sucess_extract_code, "succes.csv"
         )
-
-    def make_logger(self, path_for_file_log: str) -> tuple[Logger]:
-        file_log = logging.FileHandler(path_for_file_log, mode="a")
-        console_out = logging.StreamHandler()
-        formatter = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
-        file_log.setFormatter(formatter)
-
-        # логер который выводит также данные в консоль
-        logger_print = logging.getLogger(f"{__name__}_print")
-        logger_print.setLevel(logging.INFO)
-        logger_print.addHandler(file_log)
-        logger_print.addHandler(console_out)
-
-        # просто логер
-        logger = logging.getLogger(f"{__name__}")
-        logger.setLevel(logging.INFO)
-        logger.addHandler(file_log)
-
-        return logger_print, logger
 
     def creat_dir_if_not_exist(self, path: str, necessarily: bool = False):
         if not os.path.exists(path):

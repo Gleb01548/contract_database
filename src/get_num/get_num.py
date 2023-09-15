@@ -2,12 +2,11 @@ import os
 import re
 
 import json
-from zipfile import ZipFile
-import logging
 import pandas as pd
+from zipfile import ZipFile
 from tqdm import tqdm
-from logging import Logger
 
+from src import make_logger
 from src.constants import PATH_LOGS_GET_NUM, PATH_DATA_FROM_SPENDGOV, PATH_NUMBERS
 
 
@@ -46,7 +45,7 @@ class GetNum:
         self.path_dir_input = path_dir_input
         self.path_name_result = path_name_result
 
-        self.logger_print, self.logger = self.make_logger(path_log)
+        self.logger_print, self.logger = make_logger(path_log)
 
         if not os.path.exists(self.path_name_result) or drop_last:
             pd.DataFrame(columns=["number_contract", "address_customer", "inn_customer"]).to_csv(
@@ -58,25 +57,6 @@ class GetNum:
     def remove_bad_symbols(self, string: str) -> str:
         string = re.sub("\n|\||\xa0", "", string.strip())
         return " ".join(string.split())
-
-    def make_logger(self, path_for_file_log: str) -> tuple[Logger]:
-        file_log = logging.FileHandler(path_for_file_log, mode="a")
-        console_out = logging.StreamHandler()
-        formatter = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
-        file_log.setFormatter(formatter)
-
-        # логер который выводит также данные в консоль
-        logger_print = logging.getLogger(f"{__name__}_print")
-        logger_print.setLevel(logging.INFO)
-        logger_print.addHandler(file_log)
-        logger_print.addHandler(console_out)
-
-        # просто логер
-        logger = logging.getLogger(f"{__name__}")
-        logger.setLevel(logging.INFO)
-        logger.addHandler(file_log)
-
-        return logger_print, logger
 
     def make_cache(self):
         """
