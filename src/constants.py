@@ -10,6 +10,7 @@ PATH_LOGS_SUCСESS_GET_NUM = "logs/success/get_number"
 PATH_LOGS_SUCСESS_EXTRACT_CODE = "logs/success/extract_code"
 PATH_LOGS_SUCСESS_PROCESSING_CONTRACT = "logs/success/processing/contract"
 PATH_LOGS_SUCСESS_PROCESSING_ORG = "logs/success/processing/org"
+PATH_LOGS_SUCCESS_MAKE_CAHCE_CODE_ID = "logs/success/make_cahce_code_id"
 
 PATH_LOGS_PROBLEM_CONTRACT = "logs/problem/contract"
 PATH_LOGS_PROBLEM_ORG = "logs/problem/org"
@@ -27,8 +28,7 @@ PATH_PROCESSING_DATA_ORG = "data/processed_data/org"
 PATH_PROXY_LIST = "data/proxy.csv"
 PATH_KBK_TABLE = "data/kbk.xlsx"
 
-PATH_CACHE_CODE = "data/cache/cache_code.csv"
-PATH_CACHE_ID = "data/cache/cache_id.csv"
+PATH_CACHE_CODE_ID = "data/cache/cache_code_id.csv"
 PATH_CACHE_ADDRESS = "data/cache/cache_address.csv"
 PATH_CACHE_ORG_ADDRESS = "data/cache/cache_org_address.csv"
 

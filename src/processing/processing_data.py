@@ -54,7 +54,7 @@ class ProcessingData:
             )
 
         # подготовка кэша адрессов
-        df_cahce = pd.read_csv(path_cache_org_address, sep="|", dtype="str")
+        df_cahce = pd.read_csv(path_cache_org_address, sep="|", dtype="str", low_memory=False)
         self.columns_cache = list(df_cahce.columns)
         df_cahce["unique"] = df_cahce["code"] + "_" + df_cahce["code_type"]
         df_cahce = df_cahce[["unique", "address"]].set_index("unique")
@@ -472,7 +472,8 @@ class ProcessingData:
 
 if __name__ == "__main__":
     n = 1
-    input_dir = "2014"
+    input_dir = "2015"
+    input_file = "6.csv"
     path_input_org = os.path.join(PATH_RAW_DATA_ORG, input_dir)
     path_output_org = os.path.join(PATH_PROCESSING_DATA_ORG, input_dir)
     path_input_contract = os.path.join(PATH_RAW_DATA_CONTRACT, input_dir)
@@ -488,6 +489,10 @@ if __name__ == "__main__":
         path_log=path_logs,
     )
 
+    # file_input = os.path.join(path_input_contract, input_file)
+    # file_output = os.path.join(path_output_contrcat, input_file)
+    # processing_data.run_contract(file_input, file_output)
+
     for file_input in tqdm(
         sorted(os.listdir(path_input_org), key=lambda x: int(x.removesuffix(".csv")))[:n]
     ):
@@ -502,8 +507,6 @@ if __name__ == "__main__":
     ):
         file_output = os.path.join(path_output_contrcat, file_input)
         file_input = os.path.join(path_input_contract, file_input)
-        print(file_output)
-        print(file_input)
         processing_data.run_contract(file_input, file_output)
 
     print("данные по контрактам обработаны")

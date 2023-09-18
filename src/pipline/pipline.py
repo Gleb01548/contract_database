@@ -3,6 +3,7 @@ import shutil
 from multiprocessing import Process, Manager
 
 import pandas as pd
+from tqdm import tqdm
 
 from src import (
     GetNum,
@@ -12,16 +13,21 @@ from src import (
     ParsingOrg,
     test_proxy,
     make_logger,
+    ProcessingData,
+    make_cache_code_id,
 )
 from src.constants import (
     PATH_LOGS_PIPLINE,
     PATH_LOGS_GET_NUM,
     PATH_LOGS_PARSING_CONTRACT,
     PATH_LOGS_PARSING_ORG,
+    PATH_LOGS_PROCESSING,
     PATH_LOGS_SUCСESS_CONTRACT,
     PATH_LOGS_SUCСESS_ORG,
     PATH_LOGS_SUCСESS_GET_NUM,
     PATH_LOGS_SUCСESS_EXTRACT_CODE,
+    PATH_LOGS_SUCСESS_PROCESSING_CONTRACT,
+    PATH_LOGS_SUCСESS_PROCESSING_ORG,
     PATH_LOGS_PROBLEM_CONTRACT,
     PATH_LOGS_PROBLEM_ORG,
     PATH_DATA_FROM_SPENDGOV,
@@ -31,15 +37,19 @@ from src.constants import (
     PATH_SPLIT_DATA_CODE,
     PATH_RAW_DATA_CONTRACT,
     PATH_RAW_DATA_ORG,
-    PATH_CACHE_CODE,
-    PATH_CACHE_ID,
+    PATH_PROCESSING_DATA_CONTRACT,
+    PATH_PROCESSING_DATA_ORG,
+    PATH_CACHE_CODE_ID,
     PATH_CACHE_ADDRESS,
+    PATH_CACHE_ORG_ADDRESS,
+    PATH_LOGS_SUCCESS_MAKE_CAHCE_CODE_ID,
     PATH_PROXY_LIST,
+    PATH_KBK_TABLE,
 )
 
 
 class PiplineParsing:
-    def __init__(self, input_dir: str, use_proxy: bool = True, continue_work: bool = False):
+    def __init__(self, input_dir: str, use_proxy: bool = True, continue_work: bool = True):
         self.input_dir = input_dir
         self.use_proxy = use_proxy
         self.continue_work = continue_work
@@ -57,16 +67,26 @@ class PiplineParsing:
         self.path_logs_get_num = os.path.join(PATH_LOGS_GET_NUM, f"{self.input_dir}.log")
         self.path_logs_contract = os.path.join(PATH_LOGS_PARSING_CONTRACT, self.input_dir)
         self.path_logs_org = os.path.join(PATH_LOGS_PARSING_ORG, self.input_dir)
+        self.path_logs_processing = os.path.join(PATH_LOGS_PROCESSING, self.input_dir)
         self.path_logs_sucess_contract = os.path.join(PATH_LOGS_SUCСESS_CONTRACT, self.input_dir)
         self.path_logs_sucess_org = os.path.join(PATH_LOGS_SUCСESS_ORG, self.input_dir)
         self.path_logs_sucess_get_num = os.path.join(PATH_LOGS_SUCСESS_GET_NUM, self.input_dir)
         self.path_logs_sucess_extract_code = os.path.join(
             PATH_LOGS_SUCСESS_EXTRACT_CODE, self.input_dir
         )
+        self.path_logs_success_processing_contract = os.path.join(
+            PATH_LOGS_SUCСESS_PROCESSING_CONTRACT, self.input_dir
+        )
+        self.path_logs_sucess_processing_org = os.path.join(
+            PATH_LOGS_SUCСESS_PROCESSING_ORG, self.input_dir
+        )
+        self.path_logs_sucess_make_cache_code_id = os.path.join(
+            PATH_LOGS_SUCCESS_MAKE_CAHCE_CODE_ID, self.input_dir
+        )
         self.path_logs_problem_contract = os.path.join(PATH_LOGS_PROBLEM_CONTRACT, self.input_dir)
         self.path_logs_problem_org = os.path.join(PATH_LOGS_PROBLEM_ORG, self.input_dir)
 
-        # для считывания и сохранения файлов
+        # для считывания и сохранения файлов (не логи)
         self.path_data_from_spendgov = os.path.join(PATH_DATA_FROM_SPENDGOV, self.input_dir)
         self.path_numbers = os.path.join(PATH_NUMBERS, f"{self.input_dir}.csv")
         self.path_code_id = os.path.join(PATH_CODE_ID, f"{self.input_dir}.csv")
@@ -74,48 +94,37 @@ class PiplineParsing:
         self.path_split_data_code = os.path.join(PATH_SPLIT_DATA_CODE, self.input_dir)
         self.path_raw_data_contract = os.path.join(PATH_RAW_DATA_CONTRACT, self.input_dir)
         self.path_raw_data_org = os.path.join(PATH_RAW_DATA_ORG, self.input_dir)
-
-        # пути в кэшу
-        self.path_cache_code = PATH_CACHE_CODE
-        self.path_cache_id = PATH_CACHE_ID
-        self.path_cache_address = PATH_CACHE_ADDRESS
+        self.path_processing_data_contract = os.path.join(
+            PATH_PROCESSING_DATA_CONTRACT, self.input_dir
+        )
+        self.path_processing_data_org = os.path.join(PATH_PROCESSING_DATA_ORG, self.input_dir)
 
         # создаем папки для логги
         self.creat_dir_if_not_exist(PATH_LOGS_PIPLINE)
         self.creat_dir_if_not_exist(PATH_LOGS_GET_NUM)
         self.creat_dir_if_not_exist(self.path_logs_contract)
         self.creat_dir_if_not_exist(self.path_logs_org)
-        self.creat_dir_if_not_exist(
-            self.path_logs_sucess_get_num, necessarily=self.necessarily_make_dir
-        )
-        self.creat_dir_if_not_exist(
-            self.path_logs_sucess_contract, necessarily=self.necessarily_make_dir
-        )
-        self.creat_dir_if_not_exist(
-            self.path_logs_sucess_extract_code, necessarily=self.necessarily_make_dir
-        )
-        self.creat_dir_if_not_exist(
-            self.path_logs_sucess_org, necessarily=self.necessarily_make_dir
-        )
 
-        self.creat_dir_if_not_exist(
-            self.path_logs_problem_contract, necessarily=self.necessarily_make_dir
-        )
-        self.creat_dir_if_not_exist(
-            self.path_logs_problem_org, necessarily=self.necessarily_make_dir
-        )
-
-        # создаем папки под результаты программы
-        self.creat_dir_if_not_exist(
-            self.path_split_data_contract, necessarily=self.necessarily_make_dir
-        )
-        self.creat_dir_if_not_exist(
-            self.path_split_data_code, necessarily=self.necessarily_make_dir
-        )
-        self.creat_dir_if_not_exist(
-            self.path_raw_data_contract, necessarily=self.necessarily_make_dir
-        )
-        self.creat_dir_if_not_exist(self.path_raw_data_org, necessarily=self.necessarily_make_dir)
+        for path in [
+            # создаем папки по логи
+            self.path_logs_sucess_get_num,
+            self.path_logs_sucess_contract,
+            self.path_logs_sucess_extract_code,
+            self.path_logs_sucess_org,
+            self.path_logs_success_processing_contract,
+            self.path_logs_sucess_processing_org,
+            self.path_logs_sucess_make_cache_code_id,
+            self.path_logs_problem_contract,
+            self.path_logs_problem_org,
+            # создаем папки под результаты программы
+            self.path_split_data_contract,
+            self.path_split_data_code,
+            self.path_raw_data_contract,
+            self.path_raw_data_org,
+            self.path_processing_data_contract,
+            self.path_processing_data_org,
+        ]:
+            self.creat_dir_if_not_exist(path, necessarily=self.necessarily_make_dir)
 
         # создаем логгеры
         self.logger_print, self.logger = make_logger(self.path_logs_pipline)
@@ -124,6 +133,9 @@ class PiplineParsing:
         self.path_logs_sucess_get_num = os.path.join(self.path_logs_sucess_get_num, "succes.csv")
         self.path_logs_sucess_extract_code = os.path.join(
             self.path_logs_sucess_extract_code, "succes.csv"
+        )
+        self.path_logs_sucess_make_cache_code_id = os.path.join(
+            self.path_logs_sucess_make_cache_code_id, "succes.csv"
         )
 
     def creat_dir_if_not_exist(self, path: str, necessarily: bool = False):
@@ -152,7 +164,7 @@ class PiplineParsing:
                 self.path_logs_contract, name_file_pars.replace(".csv", ".log")
             )
             path_contract_problem = os.path.join(self.path_logs_problem_contract, name_file_pars)
-            path_succes = os.path.join(self.path_logs_sucess_contract, name_file_pars)
+            path_success = os.path.join(self.path_logs_sucess_contract, name_file_pars)
 
             parsing_contract = ParsingDataContract(
                 path_df=path_numbers_contract,
@@ -165,7 +177,7 @@ class PiplineParsing:
             parsing_contract.run()
 
             # указываем, что файл успешно спарсен
-            pd.DataFrame().to_csv(path_succes)
+            pd.DataFrame().to_csv(path_success)
 
     def create_parsing_org_process(self, proxy, filenames, continue_parsing):
         while filenames:
@@ -178,7 +190,7 @@ class PiplineParsing:
             path_output = os.path.join(self.path_raw_data_org, name_file_pars)
             path_logs = os.path.join(self.path_logs_org, name_file_pars.replace(".csv", ".log"))
             path_org_problem = os.path.join(self.path_logs_problem_org, name_file_pars)
-            path_succes = os.path.join(self.path_logs_sucess_org, name_file_pars)
+            path_success = os.path.join(self.path_logs_sucess_org, name_file_pars)
 
             parsing_org = ParsingOrg(
                 path_df=path_code_id,
@@ -190,7 +202,7 @@ class PiplineParsing:
             )
             parsing_org.run()
 
-            pd.DataFrame().to_csv(path_succes)
+            pd.DataFrame().to_csv(path_success)
 
     def start_parsing_data(self, data_type: str, continue_parsing: bool):
         if data_type == "contract":
@@ -229,6 +241,56 @@ class PiplineParsing:
         for process in processes:
             process.join()
 
+    def processing_data(self, continue_parsing):
+        list_raw_org = os.listdir(self.path_raw_data_org)
+        list_raw_contract = os.listdir(self.path_raw_data_contract)
+
+        if continue_parsing:
+            sucess_org = os.listdir(self.path_logs_sucess_processing_org)
+            sucess_contract = os.listdir(self.path_logs_success_processing_contract)
+
+            list_raw_org = list(set(list_raw_org) - set(sucess_org))
+            list_raw_contract = list(set(list_raw_contract) - set(sucess_contract))
+
+            print(
+                f"Ранее обработано org: {len(sucess_org)} из {len(sucess_org) + len(list_raw_org)}"  # noqa
+            )
+            print(
+                f"Ранее обработано contract: {len(sucess_contract)} из {len(sucess_contract) + len(list_raw_contract)}"  # noqa
+            )
+
+            if not list_raw_org and not list_raw_contract:
+                return None
+
+        list_raw_org = sorted(list_raw_org, key=lambda x: int(x.removesuffix(".csv")))
+        list_raw_contract = sorted(list_raw_contract, key=lambda x: int(x.removesuffix(".csv")))
+
+        processing_data = ProcessingData(
+            path_cache_address=PATH_CACHE_ADDRESS,
+            path_cache_org_address=PATH_CACHE_ORG_ADDRESS,
+            path_kbk_table=PATH_KBK_TABLE,
+            default_year_for_kbk=self.input_dir,
+            path_log=self.path_logs_processing,
+        )
+
+        for path_file_input in tqdm(list_raw_org):
+            path_success = os.path.join(self.path_logs_sucess_processing_org, path_file_input)
+            path_file_output = os.path.join(self.path_processing_data_org, path_file_input)
+            path_file_input = os.path.join(self.path_raw_data_org, path_file_input)
+
+            processing_data.run_org(path_input=path_file_input, path_output=path_file_output)
+            pd.DataFrame().to_csv(path_success)
+
+        for path_file_input in tqdm(list_raw_contract):
+            path_success = os.path.join(
+                self.path_logs_success_processing_contract, path_file_input
+            )
+            path_file_output = os.path.join(self.path_processing_data_contract, path_file_input)
+            path_file_input = os.path.join(self.path_raw_data_contract, path_file_input)
+
+            processing_data.run_contract(path_input=path_file_input, path_output=path_file_output)
+            pd.DataFrame().to_csv(path_success)
+
     def run(self):
         if not os.path.exists(self.path_logs_sucess_get_num):
             self.get_num = GetNum(
@@ -256,8 +318,7 @@ class PiplineParsing:
         if not os.path.exists(self.path_logs_sucess_extract_code):
             extract_code_id(
                 input_path=self.path_raw_data_contract,
-                path_global_set_code=self.path_cache_code,
-                path_global_set_id=self.path_cache_id,
+                path_global_set_code_id=PATH_CACHE_CODE_ID,
                 output_path=self.path_code_id,
             )
 
@@ -273,6 +334,18 @@ class PiplineParsing:
         self.logger_print.info("Начало парсинга заказчиков")
         self.start_parsing_data(data_type="org", continue_parsing=self.continue_work)
         self.logger_print.info("Парсинг заказчиков завершен")
+
+        self.logger_print.info("Начало обработки данных о контрактах и заказчиках")
+        self.processing_data(continue_parsing=self.continue_work)
+        self.logger_print.info("Обработка данных о контрактах и заказчиках завершена")
+
+        self.logger_print.info("Формирование кэша поставщиков")
+
+        if not os.path.exists(self.path_logs_sucess_make_cache_code_id):
+            make_cache_code_id(self.path_processing_data_org, PATH_CACHE_CODE_ID)
+            pd.DataFrame().to_csv(self.path_logs_sucess_make_cache_code_id)
+        self.logger_print.info("Формирование кэша поставщиков завершено")
+        self.logger_print.info("Выполнение программы успешно завершено!")
 
 
 def test(input_dir: str, continue_work: bool = False):
